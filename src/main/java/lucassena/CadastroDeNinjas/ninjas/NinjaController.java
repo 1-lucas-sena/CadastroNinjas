@@ -1,5 +1,7 @@
 package lucassena.CadastroDeNinjas.ninjas;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,33 +16,46 @@ public class NinjaController {
     }
 
     @GetMapping("/listar")
-    public List<NinjaDTO> listarNinjas() {
-
-        return ninjaService.listarNinjas() ;
+    public ResponseEntity<List<NinjaDTO>> listarNinjas() {
+        List<NinjaDTO> ninjas = ninjaService.listarNinjas();
+        return ResponseEntity.status(HttpStatus.OK).body(ninjas);
     }
 
     @GetMapping("/listar/{id}")
-    public NinjaDTO listarNinjasPorId(@PathVariable Long id) {
-        return ninjaService.listarNinjasPorId(id);
+    public ResponseEntity<NinjaDTO> listarNinjasPorId(@PathVariable Long id) {
+        NinjaDTO ninja = ninjaService.listarNinjasPorId(id);
+        if (ninja != null) {
+            return ResponseEntity.status(HttpStatus.OK).body(ninja);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     @PostMapping("/criar")
-    public NinjaDTO criarNinja(@RequestBody NinjaDTO ninjaDTO) {
-
-        return ninjaService.criarNinja(ninjaDTO);
+    public ResponseEntity<NinjaDTO> criarNinja(@RequestBody NinjaDTO ninjaDTO) {
+        NinjaDTO novoNinja = ninjaService.criarNinja(ninjaDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(novoNinja);
     }
 
     @DeleteMapping("/deletar/{id}")
-    public void deletar(@PathVariable Long id) {
-        ninjaService.deletarNinja(id);
+    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+
+        NinjaDTO ninja = ninjaService.listarNinjasPorId(id);
+        if (ninja != null) {
+            ninjaService.deletarNinja(id);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
 
-
-
     @PutMapping("/alterar/{id}")
-    public NinjaDTO alterar(@PathVariable Long id, @RequestBody NinjaDTO ninjaAtualizado) {
-        return ninjaService.atualizarNinja(id, ninjaAtualizado);
+    public ResponseEntity<NinjaDTO> alterar(@PathVariable Long id, @RequestBody NinjaDTO ninjaAtualizado) {
+        NinjaDTO ninjaModificado = ninjaService.atualizarNinja(id, ninjaAtualizado);
+        if (ninjaModificado != null) {
+            return ResponseEntity.status(HttpStatus.OK).body(ninjaModificado);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
 
