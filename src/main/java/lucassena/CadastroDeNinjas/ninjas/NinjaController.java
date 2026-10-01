@@ -23,21 +23,23 @@ public class NinjaController {
     }
 
     @PostMapping("/criar")
-    public String criarNinja() {
-        return "Ninja Criada com sucesso";
+    public NinjaModel criarNinja(@RequestBody NinjaModel ninja) {
+
+        return ninjaService.criarNinja(ninja);
+    }
+
+    @DeleteMapping("/deletar/{id}")
+    public void deletar(@PathVariable Long id) {
+        ninjaService.deletarNinja(id);
     }
 
 
 
 
-
-    @PutMapping("/alterar")
-    public String alterar(){
-        return "Ninja Alterada com sucesso";
+    @PutMapping("/alterar/{id}")
+    public NinjaModel alterar(@PathVariable Long id, @RequestBody NinjaModel ninjaAtualizado) {
+        return ninjaService.atualizarNinja(id, ninjaAtualizado);
     }
 
-    @DeleteMapping("/deletar")
-    public String deletar(){
-        return "Ninja Deletada com sucesso";
-    }
+
 }
