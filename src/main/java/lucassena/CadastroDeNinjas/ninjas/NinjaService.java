@@ -11,9 +11,12 @@ public class NinjaService {
     private final NinjaRepository ninjaRepository;
     private final NinjaMapper ninjaMapper;
 
-    public NinjaService(NinjaRepository ninjaRepository) {
+    public NinjaService(
+            NinjaRepository ninjaRepository,
+            NinjaMapper ninjaMapper) {
+
         this.ninjaRepository = ninjaRepository;
-        this.ninjaMapper = new NinjaMapper();
+        this.ninjaMapper = ninjaMapper;
     }
 
     public List<NinjaDTO> listarNinjas() {
