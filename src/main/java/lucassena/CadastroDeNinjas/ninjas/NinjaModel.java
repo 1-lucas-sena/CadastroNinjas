@@ -6,8 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lucassena.CadastroDeNinjas.missoes.MissoesModel;
 
-import java.util.List;
-
 @Entity
 @Table(name="tb_cadastro")
 @Data

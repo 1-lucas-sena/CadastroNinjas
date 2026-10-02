@@ -1,5 +1,6 @@
 package lucassena.CadastroDeNinjas.ninjas;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +33,7 @@ public class NinjaController {
     }
 
     @PostMapping("/criar")
-    public ResponseEntity<NinjaDTO> criarNinja(@RequestBody NinjaDTO ninjaDTO) {
+    public ResponseEntity<NinjaDTO> criarNinja(@Valid @RequestBody NinjaDTO ninjaDTO) {
         NinjaDTO novoNinja = ninjaService.criarNinja(ninjaDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoNinja);
     }
@@ -51,7 +52,7 @@ public class NinjaController {
 
 
     @PutMapping("/alterar/{id}")
-    public ResponseEntity<NinjaDTO> alterar(@PathVariable Long id, @RequestBody NinjaDTO ninjaAtualizado) {
+    public ResponseEntity<NinjaDTO> alterar(@Valid @PathVariable Long id, @RequestBody NinjaDTO ninjaAtualizado) {
         NinjaDTO ninjaModificado = ninjaService.atualizarNinja(id, ninjaAtualizado);
         if (ninjaModificado != null) {
             return ResponseEntity.status(HttpStatus.OK).body(ninjaModificado);
