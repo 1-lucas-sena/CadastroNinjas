@@ -1,5 +1,6 @@
 package lucassena.CadastroDeNinjas.missoes;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +33,7 @@ public class MissoesController {
     }
 
     @PostMapping("/criar")
-    public ResponseEntity<MissoesDTO> criarMissao(@RequestBody MissoesDTO missaoDTO) {
+    public ResponseEntity<MissoesDTO> criarMissao( @Valid @RequestBody MissoesDTO missaoDTO) {
         MissoesDTO novaMissao = missoesService.criarMissao(missaoDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(novaMissao);
     }
@@ -48,7 +49,7 @@ public class MissoesController {
     }
 
     @PutMapping("/alterar/{id}")
-    public ResponseEntity<MissoesDTO> alterar(@PathVariable Long id, @RequestBody MissoesDTO missaoAtualizada) {
+    public ResponseEntity<MissoesDTO> alterar( @Valid @PathVariable Long id, @RequestBody MissoesDTO missaoAtualizada) {
         MissoesDTO missaoModificada = missoesService.atualizarMissao(id, missaoAtualizada);
         if (missaoModificada != null) {
             return ResponseEntity.status(HttpStatus.OK).body(missaoModificada);
