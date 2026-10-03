@@ -23,7 +23,7 @@ public class NinjaDTO {
 
     @NotNull(message = "Idade é obrigatória")
     @Positive(message = "Idade deve ser maior que zero")
-    private int idade;
+    private Integer idade;
 
     @NotBlank(message = "Rank é obrigatório")
     private String rank;

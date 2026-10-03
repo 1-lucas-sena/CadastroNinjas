@@ -19,7 +19,7 @@ public class NinjaModel {
     private String nome;
     @Column(unique = true)
     private String email;
-    private int idade;
+    private Integer idade;
     private String rank;
 
     @ManyToOne
