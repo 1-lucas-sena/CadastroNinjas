@@ -13,7 +13,6 @@ public class NinjaController {
     private final NinjaService ninjaService;
 
     public NinjaController(NinjaService ninjaService) {
-
         this.ninjaService = ninjaService;
     }
 
@@ -26,10 +25,7 @@ public class NinjaController {
     @GetMapping("/listar/{id}")
     public ResponseEntity<NinjaDTO> listarNinjasPorId(@PathVariable Long id) {
         NinjaDTO ninja = ninjaService.listarNinjasPorId(id);
-        if (ninja != null) {
-            return ResponseEntity.status(HttpStatus.OK).body(ninja);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.status(HttpStatus.OK).body(ninja);
     }
 
     @PostMapping("/criar")
@@ -40,24 +36,18 @@ public class NinjaController {
 
     @DeleteMapping("/deletar/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-
-        NinjaDTO ninja = ninjaService.listarNinjasPorId(id);
-        if (ninja != null) {
-            ninjaService.deletarNinja(id);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        }
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        ninjaService.deletarNinja(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
 
     @PutMapping("/alterar/{id}")
-    public ResponseEntity<NinjaDTO> alterar(@Valid @PathVariable Long id, @RequestBody NinjaDTO ninjaAtualizado) {
+    public ResponseEntity<NinjaDTO> alterar(
+            @PathVariable Long id,
+            @Valid @RequestBody NinjaDTO ninjaAtualizado) {
+
         NinjaDTO ninjaModificado = ninjaService.atualizarNinja(id, ninjaAtualizado);
-        if (ninjaModificado != null) {
-            return ResponseEntity.status(HttpStatus.OK).body(ninjaModificado);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.status(HttpStatus.OK).body(ninjaModificado);
     }
 
 

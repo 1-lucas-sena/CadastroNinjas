@@ -1,5 +1,6 @@
 package lucassena.CadastroDeNinjas.ninjas;
 
+import lucassena.CadastroDeNinjas.exceptions.RecursoNaoEncontradoException;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +29,12 @@ public class NinjaService {
 
     public NinjaDTO listarNinjasPorId(Long ninjaID) {
         Optional<NinjaModel> ninjaPorId = ninjaRepository.findById(ninjaID);
-       return ninjaPorId.map(ninjaMapper::map).orElse(null);
+
+        return ninjaPorId
+                .map(ninjaMapper::map)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Ninja não encontrado"));
     }
 
     public NinjaDTO criarNinja(NinjaDTO ninjaDto) {
@@ -40,17 +46,24 @@ public class NinjaService {
     public void deletarNinja(Long id) {
         if (ninjaRepository.existsById(id)) {
             ninjaRepository.deleteById(id);
+            return;
         }
+
+        throw new RecursoNaoEncontradoException("Ninja não encontrado");
     }
 
     public NinjaDTO atualizarNinja(Long id, NinjaDTO ninjaDTO) {
         Optional<NinjaModel> ninjaPorId = ninjaRepository.findById(id);
+
         if (ninjaPorId.isPresent()) {
             NinjaModel ninjaAtualizado = ninjaMapper.map(ninjaDTO);
             ninjaAtualizado.setId(id);
+
             NinjaModel ninjaSalvo = ninjaRepository.save(ninjaAtualizado);
+
             return ninjaMapper.map(ninjaSalvo);
         }
-        return null;
+
+        throw new RecursoNaoEncontradoException("Ninja não encontrado");
     }
 }
