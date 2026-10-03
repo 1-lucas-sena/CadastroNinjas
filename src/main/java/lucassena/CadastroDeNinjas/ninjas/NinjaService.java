@@ -48,7 +48,6 @@ public class NinjaService {
             ninjaRepository.deleteById(id);
             return;
         }
-
         throw new RecursoNaoEncontradoException("Ninja não encontrado");
     }
 

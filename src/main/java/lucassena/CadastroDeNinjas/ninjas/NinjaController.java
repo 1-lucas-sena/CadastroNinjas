@@ -40,7 +40,6 @@ public class NinjaController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
-
     @PutMapping("/alterar/{id}")
     public ResponseEntity<NinjaDTO> alterar(
             @PathVariable Long id,
@@ -49,6 +48,4 @@ public class NinjaController {
         NinjaDTO ninjaModificado = ninjaService.atualizarNinja(id, ninjaAtualizado);
         return ResponseEntity.status(HttpStatus.OK).body(ninjaModificado);
     }
-
-
 }

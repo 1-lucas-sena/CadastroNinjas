@@ -26,34 +26,28 @@ public class MissoesController {
     @GetMapping("/listar/{id}")
     public ResponseEntity<MissoesDTO> listarMissaoPorId(@PathVariable Long id) {
         MissoesDTO missao = missoesService.listarMissoesPorId(id);
-        if (missao != null) {
-            return ResponseEntity.status(HttpStatus.OK).body(missao);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.status(HttpStatus.OK).body(missao);
     }
 
     @PostMapping("/criar")
-    public ResponseEntity<MissoesDTO> criarMissao( @Valid @RequestBody MissoesDTO missaoDTO) {
+    public ResponseEntity<MissoesDTO> criarMissao(@Valid @RequestBody MissoesDTO missaoDTO) {
         MissoesDTO novaMissao = missoesService.criarMissao(missaoDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(novaMissao);
     }
 
     @DeleteMapping("/deletar/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        MissoesDTO missao = missoesService.listarMissoesPorId(id);
-        if (missao != null) {
-            missoesService.deletarMissao(id);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        missoesService.deletarMissao(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+
     }
 
     @PutMapping("/alterar/{id}")
-    public ResponseEntity<MissoesDTO> alterar( @Valid @PathVariable Long id, @RequestBody MissoesDTO missaoAtualizada) {
+    public ResponseEntity<MissoesDTO> alterar(
+            @PathVariable Long id,
+            @Valid @RequestBody MissoesDTO missaoAtualizada) {
         MissoesDTO missaoModificada = missoesService.atualizarMissao(id, missaoAtualizada);
-        if (missaoModificada != null) {
-            return ResponseEntity.status(HttpStatus.OK).body(missaoModificada);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.status(HttpStatus.OK).body(missaoModificada);
+
     }
 }

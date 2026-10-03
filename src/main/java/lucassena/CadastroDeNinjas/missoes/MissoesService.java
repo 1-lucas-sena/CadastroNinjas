@@ -1,5 +1,6 @@
 package lucassena.CadastroDeNinjas.missoes;
 
+import lucassena.CadastroDeNinjas.exceptions.RecursoNaoEncontradoException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,47 +28,40 @@ public class MissoesService {
     }
 
     public MissoesDTO listarMissoesPorId(Long id) {
+        Optional<MissoesModel> missaoPorId = missoesRepository.findById(id);
 
-        Optional<MissoesModel> missao = missoesRepository.findById(id);
-
-        return missao
-                .map(missoesMapper::map)
-                .orElse(null);
+       return missaoPorId
+               .map(missoesMapper::map)
+               .orElseThrow(()->
+                new RecursoNaoEncontradoException(
+                        "Missão não encontrada"));
     }
 
     public MissoesDTO criarMissao(MissoesDTO missaoDTO) {
-
         MissoesModel missao = missoesMapper.map(missaoDTO);
-
         MissoesModel missaoSalva = missoesRepository.save(missao);
-
         return missoesMapper.map(missaoSalva);
     }
 
     public void deletarMissao(Long id) {
-
         if (missoesRepository.existsById(id)) {
             missoesRepository.deleteById(id);
+            return;
         }
+        throw new RecursoNaoEncontradoException("Missão não encontrada");
     }
 
-    public MissoesDTO atualizarMissao(
-            Long id,
-            MissoesDTO missaoDTO) {
-
+    public MissoesDTO atualizarMissao(Long id, MissoesDTO missaoDTO) {
         Optional<MissoesModel> missaoPorId = missoesRepository.findById(id);
 
         if (missaoPorId.isPresent()) {
-
             MissoesModel missaoAtualizada = missoesMapper.map(missaoDTO);
-
             missaoAtualizada.setId(id);
 
             MissoesModel missaoSalva = missoesRepository.save(missaoAtualizada);
 
             return missoesMapper.map(missaoSalva);
         }
-
-        return null;
+        throw new RecursoNaoEncontradoException("Missão não encontrada");
     }
 }
