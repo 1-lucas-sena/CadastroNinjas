@@ -1,6 +1,8 @@
 package lucassena.CadastroDeNinjas.ninjas;
 
 import lucassena.CadastroDeNinjas.exceptions.RecursoNaoEncontradoException;
+import lucassena.CadastroDeNinjas.missoes.MissoesModel;
+import lucassena.CadastroDeNinjas.missoes.MissoesRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -11,13 +13,16 @@ public class NinjaService {
 
     private final NinjaRepository ninjaRepository;
     private final NinjaMapper ninjaMapper;
+    private final MissoesRepository missoesRepository;
 
     public NinjaService(
             NinjaRepository ninjaRepository,
-            NinjaMapper ninjaMapper) {
+            NinjaMapper ninjaMapper,
+            MissoesRepository missoesRepository) {
 
         this.ninjaRepository = ninjaRepository;
         this.ninjaMapper = ninjaMapper;
+        this.missoesRepository = missoesRepository;
     }
 
     public List<NinjaDTO> listarNinjas() {
@@ -64,5 +69,38 @@ public class NinjaService {
         }
 
         throw new RecursoNaoEncontradoException("Ninja não encontrado");
+    }
+
+    public NinjaDTO atribuirMissao(Long ninjaId, Long missaoId) {
+
+        NinjaModel ninja = ninjaRepository.findById(ninjaId)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Ninja não encontrado"));
+
+        MissoesModel missao = missoesRepository.findById(missaoId)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Missão não encontrada"));
+
+        ninja.setMissoes(missao);
+
+        NinjaModel ninjaSalvo = ninjaRepository.save(ninja);
+
+        return ninjaMapper.map(ninjaSalvo);
+    }
+
+    public NinjaDTO removerMissao(Long ninjaId) {
+
+        NinjaModel ninja = ninjaRepository.findById(ninjaId)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Ninja não encontrado"));
+
+        ninja.setMissoes(null);
+
+        NinjaModel ninjaSalvo = ninjaRepository.save(ninja);
+
+        return ninjaMapper.map(ninjaSalvo);
     }
 }

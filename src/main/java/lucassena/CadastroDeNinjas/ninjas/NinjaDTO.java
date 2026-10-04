@@ -28,5 +28,5 @@ public class NinjaDTO {
     @NotBlank(message = "Rank é obrigatório")
     private String rank;
 
-    private MissoesModel missoes;
+    private Long missaoId;
 }

@@ -48,4 +48,23 @@ public class NinjaController {
         NinjaDTO ninjaModificado = ninjaService.atualizarNinja(id, ninjaAtualizado);
         return ResponseEntity.status(HttpStatus.OK).body(ninjaModificado);
     }
+
+    @PatchMapping("/{ninjaId}/missao/{missaoId}")
+    public ResponseEntity<NinjaDTO> atribuirMissao(
+            @PathVariable Long ninjaId,
+            @PathVariable Long missaoId) {
+
+        NinjaDTO ninjaAtualizado =
+                ninjaService.atribuirMissao(ninjaId, missaoId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(ninjaAtualizado);
+    }
+
+    @PatchMapping("/{ninjaId}/missao")
+    public ResponseEntity<NinjaDTO> removerMissao( @PathVariable Long ninjaId){
+        NinjaDTO ninjaAtualizado =
+                ninjaService.removerMissao(ninjaId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(ninjaAtualizado);
+    }
 }
