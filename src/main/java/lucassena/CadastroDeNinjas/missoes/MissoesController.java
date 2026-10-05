@@ -51,11 +51,4 @@ public class MissoesController {
 
     }
 
-    @PatchMapping("/{id}/inativar")
-    public ResponseEntity<MissoesDTO> inativar(@PathVariable Long id) {
-
-        MissoesDTO missao = missoesService.inativarMissao(id);
-
-        return ResponseEntity.status(HttpStatus.OK).body(missao);
-    }
 }
