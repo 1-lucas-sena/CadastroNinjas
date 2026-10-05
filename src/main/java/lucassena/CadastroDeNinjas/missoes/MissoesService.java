@@ -56,13 +56,12 @@ public class MissoesService {
 
     public MissoesDTO atualizarMissao(Long id, MissoesDTO missaoDTO) {
 
-        buscarPorId(id);
-
-        MissoesModel missaoAtualizada = missoesMapper.map(missaoDTO);
-        missaoAtualizada.setId(id);
+        MissoesModel missao = buscarPorId(id);
+        missao.setNome(missaoDTO.getNome());
+        missao.setRank(missaoDTO.getRank());
 
         MissoesModel missaoSalva =
-                missoesRepository.save(missaoAtualizada);
+                missoesRepository.save(missao);
 
         return missoesMapper.map(missaoSalva);
     }
