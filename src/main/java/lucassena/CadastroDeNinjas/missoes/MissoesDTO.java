@@ -21,4 +21,6 @@ public class MissoesDTO {
 
     @NotNull(message = "Rank é obrigatório")
     private Rank rank;
+
+    private StatusMissao status;
 }

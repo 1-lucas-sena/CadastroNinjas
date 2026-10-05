@@ -1,0 +1,5 @@
+ALTER TABLE tb_missoes
+ALTER COLUMN RANKING RENAME TO rank;
+
+ALTER TABLE tb_missoes
+    ADD COLUMN status VARCHAR(20);

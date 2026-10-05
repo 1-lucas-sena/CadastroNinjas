@@ -21,9 +21,11 @@ public class MissoesModel {
     private Long id;
     private String nome;
 
-    @Column(name = "RANKING")
     @Enumerated(EnumType.STRING)
     private Rank rank;
+
+    @Enumerated(EnumType.STRING)
+    private StatusMissao status;
 
     @OneToMany(mappedBy = "missoes")
     @JsonIgnore

@@ -1,6 +1,8 @@
 package lucassena.CadastroDeNinjas.missoes;
 
 import lucassena.CadastroDeNinjas.exceptions.RecursoNaoEncontradoException;
+import lucassena.CadastroDeNinjas.ninjas.NinjaModel;
+import lucassena.CadastroDeNinjas.ninjas.NinjaRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,11 +13,14 @@ public class MissoesService {
 
     private final MissoesRepository missoesRepository;
     private final MissoesMapper missoesMapper;
+    private final NinjaRepository ninjaRepository;
 
     public MissoesService(MissoesRepository missoesRepository,
-                          MissoesMapper missoesMapper) {
+                          MissoesMapper missoesMapper,
+                          NinjaRepository ninjaRepository) {
         this.missoesRepository = missoesRepository;
         this.missoesMapper = missoesMapper;
+        this.ninjaRepository = ninjaRepository;
     }
 
     public List<MissoesDTO> listarMissoes() {
@@ -39,7 +44,9 @@ public class MissoesService {
 
     public MissoesDTO criarMissao(MissoesDTO missaoDTO) {
         MissoesModel missao = missoesMapper.map(missaoDTO);
+        missao.setStatus(StatusMissao.EM_ESPERA);
         MissoesModel missaoSalva = missoesRepository.save(missao);
+
         return missoesMapper.map(missaoSalva);
     }
 
@@ -64,4 +71,26 @@ public class MissoesService {
         }
         throw new RecursoNaoEncontradoException("Missão não encontrada");
     }
+
+    public MissoesDTO inativarMissao(Long id) {
+
+        MissoesModel missao = missoesRepository.findById(id)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Missão não encontrada"));
+
+        List<NinjaModel> ninjas = ninjaRepository.findByMissoes_Id(id);
+
+        for (NinjaModel ninja : ninjas) {
+            ninja.setMissoes(null);
+            ninjaRepository.save(ninja);
+        }
+
+        missao.setStatus(StatusMissao.INATIVA);
+
+        MissoesModel missaoSalva = missoesRepository.save(missao);
+
+        return missoesMapper.map(missaoSalva);
+    }
+
 }
