@@ -11,7 +11,7 @@ public class MissoesMapper {
 
         missoesModel.setId(missoesDTO.getId());
         missoesModel.setNome(missoesDTO.getNome());
-        missoesModel.setRanking(missoesDTO.getRanking());
+        missoesModel.setRank(missoesDTO.getRank());
 
         return missoesModel;
     }
@@ -22,7 +22,7 @@ public class MissoesMapper {
 
         missoesDTO.setId(missoesModel.getId());
         missoesDTO.setNome(missoesModel.getNome());
-        missoesDTO.setRanking(missoesModel.getRanking());
+        missoesDTO.setRank(missoesModel.getRank());
 
         return missoesDTO;
     }

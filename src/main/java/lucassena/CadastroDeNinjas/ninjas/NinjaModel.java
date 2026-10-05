@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lucassena.CadastroDeNinjas.missoes.MissoesModel;
+import lucassena.CadastroDeNinjas.util.Rank;
 
 @Entity
 @Table(name="tb_cadastro")
@@ -20,7 +21,9 @@ public class NinjaModel {
     @Column(unique = true)
     private String email;
     private Integer idade;
-    private String rank;
+
+    @Enumerated(EnumType.STRING)
+    private Rank rank;
 
     @ManyToOne
     @JoinColumn(name = "missoes_id")

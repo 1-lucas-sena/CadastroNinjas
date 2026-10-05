@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lucassena.CadastroDeNinjas.ninjas.NinjaModel;
+import lucassena.CadastroDeNinjas.util.Rank;
 
 import java.util.List;
 
@@ -19,7 +20,10 @@ public class MissoesModel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String nome;
-    private String ranking;
+
+    @Column(name = "RANKING")
+    @Enumerated(EnumType.STRING)
+    private Rank rank;
 
     @OneToMany(mappedBy = "missoes")
     @JsonIgnore

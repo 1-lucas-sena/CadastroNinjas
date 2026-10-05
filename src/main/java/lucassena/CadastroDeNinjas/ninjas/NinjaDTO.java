@@ -4,7 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lucassena.CadastroDeNinjas.missoes.MissoesModel;
+import lucassena.CadastroDeNinjas.util.Rank;
 
 @Data
 @NoArgsConstructor
@@ -25,8 +25,8 @@ public class NinjaDTO {
     @Positive(message = "Idade deve ser maior que zero")
     private Integer idade;
 
-    @NotBlank(message = "Rank é obrigatório")
-    private String rank;
+    @NotNull(message = "Rank é obrigatório")
+    private Rank rank;
 
     private Long missaoId;
 }
