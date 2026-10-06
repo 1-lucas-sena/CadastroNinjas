@@ -47,12 +47,13 @@ public class NinjaMissaoService {
 
         MissoesModel missao = missoesService.buscarPorId(missaoId);
 
-        if (missao.getStatus() == StatusMissao.INATIVA) {
-            throw new RegraDeNegocioException(
-                    "Não é possível atribuir Ninja a uma missão inativa");
-        }
+        if (!missaoPodeReceberNinja(missao)) {
 
-        if (missao.getStatus() == StatusMissao.CONCLUIDA) {
+            if (missao.getStatus() == StatusMissao.INATIVA) {
+                throw new RegraDeNegocioException(
+                        "Não é possível atribuir Ninja a uma missão inativa");
+            }
+
             throw new RegraDeNegocioException(
                     "Não é possível atribuir Ninja a uma missão concluída");
         }
@@ -60,7 +61,7 @@ public class NinjaMissaoService {
         ninja.setMissoes(missao);
 
         if (missao.getStatus() == StatusMissao.ATIVA
-                && ninja.getRank().eMaiorOuIgual(missao.getRank())) {
+                && ninjaQualificadoParaMissao(ninja, missao)) {
 
             missao.setStatus(StatusMissao.EM_CURSO);
             missoesService.salvar(missao);
@@ -147,7 +148,7 @@ public class NinjaMissaoService {
 
         boolean existeNinjaQualificado = ninjas.stream()
                 .anyMatch(n ->
-                        n.getRank().eMaiorOuIgual(missao.getRank())
+                        ninjaQualificadoParaMissao(n, missao)
                 );
 
         if (missao.getStatus() == StatusMissao.EM_CURSO
@@ -179,28 +180,20 @@ public class NinjaMissaoService {
                     "Ninja já está atribuído a esta missão");
         }
 
-        if (novaMissao.getStatus() == StatusMissao.INATIVA) {
-            throw new RegraDeNegocioException(
-                    "Não é possível transferir Ninja para uma missão inativa");
-        }
+        if (!missaoPodeReceberNinja(novaMissao)) {
 
-        if (novaMissao.getStatus() == StatusMissao.CONCLUIDA) {
+            if (novaMissao.getStatus() == StatusMissao.INATIVA) {
+                throw new RegraDeNegocioException(
+                        "Não é possível transferir Ninja para uma missão inativa");
+            }
+
             throw new RegraDeNegocioException(
                     "Não é possível transferir Ninja para uma missão concluída");
         }
 
         if (missaoAtual.getStatus() == StatusMissao.EM_CURSO) {
 
-            List<NinjaModel> ninjas =
-                    ninjaService.buscarPorMissao(missaoAtual.getId());
-
-            boolean existeOutroNinjaQualificado = ninjas.stream()
-                    .filter(n -> !n.getId().equals(ninja.getId()))
-                    .anyMatch(n ->
-                            n.getRank().eMaiorOuIgual(missaoAtual.getRank())
-                    );
-
-            if (!existeOutroNinjaQualificado) {
+            if (!existeOutroNinjaQualificado(ninja, missaoAtual)) {
                 throw new RegraDeNegocioException(
                         "Ninja não pode ser transferido, pois é o último Ninja qualificado da missão");
             }
@@ -209,7 +202,7 @@ public class NinjaMissaoService {
         ninja.setMissoes(novaMissao);
 
         if (novaMissao.getStatus() == StatusMissao.ATIVA
-                && ninja.getRank().eMaiorOuIgual(novaMissao.getRank())) {
+                && ninjaQualificadoParaMissao(ninja, novaMissao)) {
 
             novaMissao.setStatus(StatusMissao.EM_CURSO);
         }
@@ -218,5 +211,30 @@ public class NinjaMissaoService {
         missoesService.salvar(novaMissao);
 
         return ninjaMapper.map(ninja);
+    }
+
+    private boolean missaoPodeReceberNinja(MissoesModel missao) {
+
+        return missao.getStatus() == StatusMissao.ATIVA
+                || missao.getStatus() == StatusMissao.EM_CURSO;
+    }
+
+    private boolean ninjaQualificadoParaMissao(
+            NinjaModel ninja,
+            MissoesModel missao) {
+
+        return ninja.getRank().eMaiorOuIgual(missao.getRank());
+    }
+
+    private boolean existeOutroNinjaQualificado(
+            NinjaModel ninja,
+            MissoesModel missao) {
+
+        List<NinjaModel> ninjas =
+                ninjaService.buscarPorMissao(missao.getId());
+
+        return ninjas.stream()
+                .filter(n -> !n.getId().equals(ninja.getId()))
+                .anyMatch(n -> ninjaQualificadoParaMissao(n, missao));
     }
 }
