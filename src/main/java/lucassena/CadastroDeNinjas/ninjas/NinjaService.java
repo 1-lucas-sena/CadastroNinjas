@@ -2,12 +2,12 @@ package lucassena.CadastroDeNinjas.ninjas;
 
 import lucassena.CadastroDeNinjas.exceptions.RecursoNaoEncontradoException;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class NinjaService {
-
 
     private final NinjaRepository ninjaRepository;
     private final NinjaMapper ninjaMapper;
@@ -20,15 +20,24 @@ public class NinjaService {
         this.ninjaMapper = ninjaMapper;
     }
 
+
+    // =========================
+    // CONSULTAS
+    // =========================
+
     public List<NinjaDTO> listarNinjas() {
+
         List<NinjaModel> ninjas = ninjaRepository.findAll();
+
         return ninjas.stream()
                 .map(ninjaMapper::map)
                 .toList();
     }
 
     public NinjaDTO listarNinjasPorId(Long ninjaID) {
-        Optional<NinjaModel> ninjaPorId = ninjaRepository.findById(ninjaID);
+
+        Optional<NinjaModel> ninjaPorId =
+                ninjaRepository.findById(ninjaID);
 
         return ninjaPorId
                 .map(ninjaMapper::map)
@@ -37,18 +46,23 @@ public class NinjaService {
                                 "Ninja não encontrado"));
     }
 
-    public NinjaDTO criarNinja(NinjaDTO ninjaDto) {
-        NinjaModel ninja = ninjaMapper.map(ninjaDto);
-        ninja = ninjaRepository.save(ninja);
-        return ninjaMapper.map(ninja);
+    public List<NinjaModel> buscarPorMissao(Long missaoId) {
+
+        return ninjaRepository.findByMissoes_Id(missaoId);
     }
 
-    public void deletarNinja(Long id) {
-        if (ninjaRepository.existsById(id)) {
-            ninjaRepository.deleteById(id);
-            return;
-        }
-        throw new RecursoNaoEncontradoException("Ninja não encontrado");
+
+    // =========================
+    // CRUD
+    // =========================
+
+    public NinjaDTO criarNinja(NinjaDTO ninjaDto) {
+
+        NinjaModel ninja = ninjaMapper.map(ninjaDto);
+
+        ninja = ninjaRepository.save(ninja);
+
+        return ninjaMapper.map(ninja);
     }
 
     public NinjaDTO atualizarNinja(Long id, NinjaDTO ninjaDTO) {
@@ -60,10 +74,27 @@ public class NinjaService {
         ninja.setIdade(ninjaDTO.getIdade());
         ninja.setRank(ninjaDTO.getRank());
 
-        NinjaModel ninjaSalvo = ninjaRepository.save(ninja);
+        NinjaModel ninjaSalvo =
+                ninjaRepository.save(ninja);
 
         return ninjaMapper.map(ninjaSalvo);
     }
+
+    public void deletarNinja(Long id) {
+
+        if (ninjaRepository.existsById(id)) {
+            ninjaRepository.deleteById(id);
+            return;
+        }
+
+        throw new RecursoNaoEncontradoException(
+                "Ninja não encontrado");
+    }
+
+
+    // =========================
+    // RELACIONAMENTO
+    // =========================
 
     public NinjaDTO removerMissao(Long ninjaId) {
 
@@ -74,7 +105,8 @@ public class NinjaService {
 
         ninja.setMissoes(null);
 
-        NinjaModel ninjaSalvo = ninjaRepository.save(ninja);
+        NinjaModel ninjaSalvo =
+                ninjaRepository.save(ninja);
 
         return ninjaMapper.map(ninjaSalvo);
     }
@@ -91,6 +123,11 @@ public class NinjaService {
         ninjaRepository.saveAll(ninjas);
     }
 
+
+    // =========================
+    // MÉTODOS INTERNOS
+    // =========================
+
     public NinjaModel buscarPorId(Long id) {
 
         return ninjaRepository.findById(id)
@@ -100,6 +137,7 @@ public class NinjaService {
     }
 
     public NinjaModel salvar(NinjaModel ninja) {
+
         return ninjaRepository.save(ninja);
     }
 }

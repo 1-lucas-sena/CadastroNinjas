@@ -27,6 +27,16 @@ public class NinjaMissaoController {
         return ResponseEntity.status(HttpStatus.OK).body(ninjaAtualizado);
     }
 
+    @PatchMapping("/ninjas/{ninjaId}/missao")
+    public ResponseEntity<NinjaDTO> removerMissao(
+            @PathVariable Long ninjaId) {
+
+        NinjaDTO ninjaAtualizado =
+                ninjaMissaoService.removerMissao(ninjaId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(ninjaAtualizado);
+    }
+
     @PatchMapping("/missoes/{id}/inativar")
     public ResponseEntity<MissoesDTO> inativarMissao(
             @PathVariable Long id) {
@@ -56,4 +66,18 @@ public class NinjaMissaoController {
 
         return ResponseEntity.status(HttpStatus.OK).body(missaoAtivada);
     }
+
+    @PatchMapping("/ninjas/{ninjaId}/transferir/{novaMissaoId}")
+    public ResponseEntity<NinjaDTO> transferirMissao(
+            @PathVariable Long ninjaId,
+            @PathVariable Long novaMissaoId) {
+
+        NinjaDTO ninjaAtualizado =
+                ninjaMissaoService.transferirMissao(
+                        ninjaId,
+                        novaMissaoId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(ninjaAtualizado);
+    }
+
 }

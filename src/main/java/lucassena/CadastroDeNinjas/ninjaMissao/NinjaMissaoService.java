@@ -13,6 +13,8 @@ import lucassena.CadastroDeNinjas.ninjas.NinjaModel;
 import lucassena.CadastroDeNinjas.ninjas.NinjaService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class NinjaMissaoService {
 
@@ -37,6 +39,12 @@ public class NinjaMissaoService {
     public NinjaDTO atribuirMissao(Long ninjaId, Long missaoId) {
 
         NinjaModel ninja = ninjaService.buscarPorId(ninjaId);
+
+        if (ninja.getMissoes() != null) {
+            throw new RegraDeNegocioException(
+                    "Ninja já possui uma missão");
+        }
+
         MissoesModel missao = missoesService.buscarPorId(missaoId);
 
         if (missao.getStatus() == StatusMissao.INATIVA) {
@@ -116,5 +124,99 @@ public class NinjaMissaoService {
         MissoesModel missaoAtivada = missoesService.salvar(missao);
 
         return missoesMapper.map(missaoAtivada);
+    }
+
+    @Transactional
+    public NinjaDTO removerMissao(Long ninjaId) {
+
+        NinjaModel ninja = ninjaService.buscarPorId(ninjaId);
+
+        if (ninja.getMissoes() == null) {
+            throw new RegraDeNegocioException(
+                    "Ninja não possui uma missão");
+        }
+
+        MissoesModel missao = ninja.getMissoes();
+
+        ninja.setMissoes(null);
+
+        ninjaService.salvar(ninja);
+
+        List<NinjaModel> ninjas =
+                ninjaService.buscarPorMissao(missao.getId());
+
+        boolean existeNinjaQualificado = ninjas.stream()
+                .anyMatch(n ->
+                        n.getRank().eMaiorOuIgual(missao.getRank())
+                );
+
+        if (missao.getStatus() == StatusMissao.EM_CURSO
+                && !existeNinjaQualificado) {
+
+            missao.setStatus(StatusMissao.ATIVA);
+
+            missoesService.salvar(missao);
+        }
+
+        return ninjaMapper.map(ninja);
+    }
+
+    @Transactional
+    public NinjaDTO transferirMissao(Long ninjaId, Long novaMissaoId) {
+
+        NinjaModel ninja = ninjaService.buscarPorId(ninjaId);
+        MissoesModel novaMissao = missoesService.buscarPorId(novaMissaoId);
+
+        if (ninja.getMissoes() == null) {
+            throw new RegraDeNegocioException(
+                    "Ninja não possui uma missão");
+        }
+
+        MissoesModel missaoAtual = ninja.getMissoes();
+
+        if (missaoAtual.getId().equals(novaMissao.getId())) {
+            throw new RegraDeNegocioException(
+                    "Ninja já está atribuído a esta missão");
+        }
+
+        if (novaMissao.getStatus() == StatusMissao.INATIVA) {
+            throw new RegraDeNegocioException(
+                    "Não é possível transferir Ninja para uma missão inativa");
+        }
+
+        if (novaMissao.getStatus() == StatusMissao.CONCLUIDA) {
+            throw new RegraDeNegocioException(
+                    "Não é possível transferir Ninja para uma missão concluída");
+        }
+
+        if (missaoAtual.getStatus() == StatusMissao.EM_CURSO) {
+
+            List<NinjaModel> ninjas =
+                    ninjaService.buscarPorMissao(missaoAtual.getId());
+
+            boolean existeOutroNinjaQualificado = ninjas.stream()
+                    .filter(n -> !n.getId().equals(ninja.getId()))
+                    .anyMatch(n ->
+                            n.getRank().eMaiorOuIgual(missaoAtual.getRank())
+                    );
+
+            if (!existeOutroNinjaQualificado) {
+                throw new RegraDeNegocioException(
+                        "Ninja não pode ser transferido, pois é o último Ninja qualificado da missão");
+            }
+        }
+
+        ninja.setMissoes(novaMissao);
+
+        if (novaMissao.getStatus() == StatusMissao.ATIVA
+                && ninja.getRank().eMaiorOuIgual(novaMissao.getRank())) {
+
+            novaMissao.setStatus(StatusMissao.EM_CURSO);
+        }
+
+        ninjaService.salvar(ninja);
+        missoesService.salvar(novaMissao);
+
+        return ninjaMapper.map(ninja);
     }
 }
