@@ -36,4 +36,24 @@ public class NinjaMissaoController {
 
         return ResponseEntity.status(HttpStatus.OK).body(missaoInativada);
     }
+
+    @PatchMapping("/missoes/{id}/concluir")
+    public ResponseEntity<MissoesDTO> concluirMissao(
+            @PathVariable Long id) {
+
+        MissoesDTO missaoConcluida =
+                ninjaMissaoService.concluirMissao(id);
+
+        return ResponseEntity.status(HttpStatus.OK).body(missaoConcluida);
+    }
+
+    @PatchMapping("/missoes/{id}/ativar")
+    public ResponseEntity<MissoesDTO> ativarMissao(
+            @PathVariable Long id) {
+
+        MissoesDTO missaoAtivada =
+                ninjaMissaoService.ativarMissao(id);
+
+        return ResponseEntity.status(HttpStatus.OK).body(missaoAtivada);
+    }
 }

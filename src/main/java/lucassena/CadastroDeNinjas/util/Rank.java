@@ -5,5 +5,9 @@ public enum Rank {
     C,
     B,
     A,
-    S
+    S;
+
+    public boolean eMaiorOuIgual(Rank outro) {
+        return this.ordinal() >= outro.ordinal();
+    }
 }
