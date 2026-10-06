@@ -47,7 +47,7 @@ public class MissoesService {
 
         MissoesModel missao = missoesMapper.map(missaoDTO);
 
-        missao.setStatus(StatusMissao.EM_ESPERA);
+        missao.setStatus(StatusMissao.ATIVA);
 
         MissoesModel missaoSalva = missoesRepository.save(missao);
 

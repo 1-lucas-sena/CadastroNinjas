@@ -51,10 +51,10 @@ public class NinjaMissaoService {
 
         ninja.setMissoes(missao);
 
-        if (missao.getStatus() == StatusMissao.EM_ESPERA
+        if (missao.getStatus() == StatusMissao.ATIVA
                 && ninja.getRank().eMaiorOuIgual(missao.getRank())) {
 
-            missao.setStatus(StatusMissao.ATIVA);
+            missao.setStatus(StatusMissao.EM_CURSO);
             missoesService.salvar(missao);
         }
 
@@ -87,9 +87,9 @@ public class NinjaMissaoService {
 
         MissoesModel missao = missoesService.buscarPorId(id);
 
-        if (missao.getStatus() != StatusMissao.ATIVA) {
+        if (missao.getStatus() != StatusMissao.EM_CURSO) {
             throw new RegraDeNegocioException(
-                    "Só é possível concluir uma missão ativa");
+                    "Só é possível concluir uma missão em curso");
         }
 
         ninjaService.removerMissaoDosNinjas(missao.getId());
@@ -100,6 +100,7 @@ public class NinjaMissaoService {
 
         return missoesMapper.map(missaoConcluida);
     }
+
     @Transactional
     public MissoesDTO ativarMissao(Long id) {
 
@@ -110,7 +111,7 @@ public class NinjaMissaoService {
                     "Só é possível ativar uma missão inativa");
         }
 
-        missao.setStatus(StatusMissao.EM_ESPERA);
+        missao.setStatus(StatusMissao.ATIVA);
 
         MissoesModel missaoAtivada = missoesService.salvar(missao);
 
