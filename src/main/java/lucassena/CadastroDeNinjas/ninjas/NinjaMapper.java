@@ -1,3 +1,4 @@
+
 package lucassena.CadastroDeNinjas.ninjas;
 
 import org.springframework.stereotype.Component;
@@ -5,10 +6,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class NinjaMapper {
 
-    public NinjaModel map(NinjaDTO ninjaDTO) {
+    public NinjaModel map(NinjaRequestDTO ninjaDTO) {
+
         NinjaModel ninjaModel = new NinjaModel();
 
-        ninjaModel.setId(ninjaDTO.getId());
         ninjaModel.setNome(ninjaDTO.getNome());
         ninjaModel.setEmail(ninjaDTO.getEmail());
         ninjaModel.setIdade(ninjaDTO.getIdade());
@@ -17,8 +18,9 @@ public class NinjaMapper {
         return ninjaModel;
     }
 
-    public NinjaDTO map(NinjaModel ninjaModel) {
-        NinjaDTO ninjaDTO = new NinjaDTO();
+    public NinjaResponseDTO map(NinjaModel ninjaModel) {
+
+        NinjaResponseDTO ninjaDTO = new NinjaResponseDTO();
 
         ninjaDTO.setId(ninjaModel.getId());
         ninjaDTO.setNome(ninjaModel.getNome());

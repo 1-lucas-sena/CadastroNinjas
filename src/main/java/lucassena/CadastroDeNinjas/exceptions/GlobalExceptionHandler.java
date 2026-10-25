@@ -71,7 +71,7 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now(),
                 HttpStatus.CONFLICT.value(),
                 HttpStatus.CONFLICT.getReasonPhrase(),
-                "Email já cadastrado"
+                "Operação não permitida devido a uma restrição de integridade dos dados"
         );
 
         return ResponseEntity

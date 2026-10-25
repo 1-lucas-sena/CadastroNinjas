@@ -1,31 +1,37 @@
+
 package lucassena.CadastroDeNinjas.ninjas;
 
 import lucassena.CadastroDeNinjas.exceptions.RecursoNaoEncontradoException;
+import lucassena.CadastroDeNinjas.missaoStatus.MissaoStatusService;
+import lucassena.CadastroDeNinjas.missoes.MissoesModel;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class NinjaService {
 
     private final NinjaRepository ninjaRepository;
     private final NinjaMapper ninjaMapper;
+    private final MissaoStatusService missaoStatusService;
 
     public NinjaService(
             NinjaRepository ninjaRepository,
-            NinjaMapper ninjaMapper) {
+            NinjaMapper ninjaMapper,
+            MissaoStatusService missaoStatusService) {
 
         this.ninjaRepository = ninjaRepository;
         this.ninjaMapper = ninjaMapper;
+        this.missaoStatusService = missaoStatusService;
     }
-
 
     // =========================
     // CONSULTAS
     // =========================
 
-    public List<NinjaDTO> listarNinjas() {
+    @Transactional(readOnly = true)
+    public List<NinjaResponseDTO> listarNinjas() {
 
         List<NinjaModel> ninjas = ninjaRepository.findAll();
 
@@ -34,110 +40,64 @@ public class NinjaService {
                 .toList();
     }
 
-    public NinjaDTO listarNinjasPorId(Long ninjaID) {
+    @Transactional(readOnly = true)
+    public NinjaResponseDTO listarNinjasPorId(Long ninjaID) {
 
-        Optional<NinjaModel> ninjaPorId =
-                ninjaRepository.findById(ninjaID);
-
-        return ninjaPorId
-                .map(ninjaMapper::map)
-                .orElseThrow(() ->
-                        new RecursoNaoEncontradoException(
-                                "Ninja não encontrado"));
-    }
-
-    public List<NinjaModel> buscarPorMissao(Long missaoId) {
-
-        return ninjaRepository.findByMissoes_Id(missaoId);
-    }
-
-
-    // =========================
-    // CRUD
-    // =========================
-
-    public NinjaDTO criarNinja(NinjaDTO ninjaDto) {
-
-        NinjaModel ninja = ninjaMapper.map(ninjaDto);
-
-        ninja = ninjaRepository.save(ninja);
+        NinjaModel ninja = buscarPorId(ninjaID);
 
         return ninjaMapper.map(ninja);
     }
 
-    public NinjaDTO atualizarNinja(Long id, NinjaDTO ninjaDTO) {
+    // =========================
+    // CADASTRO
+    // =========================
+
+    public NinjaResponseDTO criarNinja(NinjaRequestDTO ninjaDTO) {
+
+        NinjaModel ninja = ninjaMapper.map(ninjaDTO);
+
+        NinjaModel ninjaSalvo = ninjaRepository.save(ninja);
+
+        return ninjaMapper.map(ninjaSalvo);
+    }
+
+    // =========================
+    // ATUALIZAÇÃO
+    // =========================
+
+    @Transactional
+    public NinjaResponseDTO atualizarNinja(
+            Long id,
+            NinjaRequestDTO ninjaDTO) {
 
         NinjaModel ninja = buscarPorId(id);
+
+        MissoesModel missao = ninja.getMissoes();
 
         ninja.setNome(ninjaDTO.getNome());
         ninja.setEmail(ninjaDTO.getEmail());
         ninja.setIdade(ninjaDTO.getIdade());
         ninja.setRank(ninjaDTO.getRank());
 
-        NinjaModel ninjaSalvo =
-                ninjaRepository.save(ninja);
+        NinjaModel ninjaSalvo = ninjaRepository.save(ninja);
+
+        if (missao != null) {
+            ninjaRepository.flush();
+            missaoStatusService.reavaliarStatus(missao);
+        }
 
         return ninjaMapper.map(ninjaSalvo);
     }
-
-    public void deletarNinja(Long id) {
-
-        if (ninjaRepository.existsById(id)) {
-            ninjaRepository.deleteById(id);
-            return;
-        }
-
-        throw new RecursoNaoEncontradoException(
-                "Ninja não encontrado");
-    }
-
-
-    // =========================
-    // RELACIONAMENTO
-    // =========================
-
-    public NinjaDTO removerMissao(Long ninjaId) {
-
-        NinjaModel ninja = ninjaRepository.findById(ninjaId)
-                .orElseThrow(() ->
-                        new RecursoNaoEncontradoException(
-                                "Ninja não encontrado"));
-
-        ninja.setMissoes(null);
-
-        NinjaModel ninjaSalvo =
-                ninjaRepository.save(ninja);
-
-        return ninjaMapper.map(ninjaSalvo);
-    }
-
-    public void removerMissaoDosNinjas(Long missaoId) {
-
-        List<NinjaModel> ninjas =
-                ninjaRepository.findByMissoes_Id(missaoId);
-
-        for (NinjaModel ninja : ninjas) {
-            ninja.setMissoes(null);
-        }
-
-        ninjaRepository.saveAll(ninjas);
-    }
-
 
     // =========================
     // MÉTODOS INTERNOS
     // =========================
 
-    public NinjaModel buscarPorId(Long id) {
+    private NinjaModel buscarPorId(Long id) {
 
         return ninjaRepository.findById(id)
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException(
                                 "Ninja não encontrado"));
-    }
-
-    public NinjaModel salvar(NinjaModel ninja) {
-
-        return ninjaRepository.save(ninja);
     }
 }

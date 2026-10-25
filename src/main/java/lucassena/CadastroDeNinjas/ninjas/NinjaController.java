@@ -1,6 +1,7 @@
 package lucassena.CadastroDeNinjas.ninjas;
 
 import jakarta.validation.Valid;
+import lucassena.CadastroDeNinjas.ninjaMissao.NinjaMissaoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,64 +13,71 @@ import java.util.List;
 public class NinjaController {
 
     private final NinjaService ninjaService;
+    private final NinjaMissaoService ninjaMissaoService;
 
-    public NinjaController(NinjaService ninjaService) {
+    public NinjaController(
+            NinjaService ninjaService,
+            NinjaMissaoService ninjaMissaoService) {
+
         this.ninjaService = ninjaService;
+        this.ninjaMissaoService = ninjaMissaoService;
     }
 
-    @GetMapping("/listar")
-    public ResponseEntity<List<NinjaDTO>> listarNinjas() {
+    // =========================
+    // CONSULTAS
+    // =========================
 
-        List<NinjaDTO> ninjas = ninjaService.listarNinjas();
+    @GetMapping
+    public ResponseEntity<List<NinjaResponseDTO>> listarNinjas() {
 
-        return ResponseEntity.status(HttpStatus.OK).body(ninjas);
+        List<NinjaResponseDTO> ninjas =
+                ninjaService.listarNinjas();
+
+        return ResponseEntity.ok(ninjas);
     }
 
-    @GetMapping("/listar/{id}")
-    public ResponseEntity<NinjaDTO> listarNinjasPorId(
+    @GetMapping("/{id}")
+    public ResponseEntity<NinjaResponseDTO> listarNinjasPorId(
             @PathVariable Long id) {
 
-        NinjaDTO ninja = ninjaService.listarNinjasPorId(id);
+        NinjaResponseDTO ninja =
+                ninjaService.listarNinjasPorId(id);
 
-        return ResponseEntity.status(HttpStatus.OK).body(ninja);
+        return ResponseEntity.ok(ninja);
     }
 
-    @PostMapping("/criar")
-    public ResponseEntity<NinjaDTO> criarNinja(
-            @Valid @RequestBody NinjaDTO ninjaDTO) {
+    // =========================
+    // CRUD
+    // =========================
 
-        NinjaDTO novoNinja = ninjaService.criarNinja(ninjaDTO);
+    @PostMapping
+    public ResponseEntity<NinjaResponseDTO> criarNinja(
+            @Valid @RequestBody NinjaRequestDTO ninjaDTO) {
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(novoNinja);
+        NinjaResponseDTO novoNinja =
+                ninjaService.criarNinja(ninjaDTO);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(novoNinja);
     }
 
-    @DeleteMapping("/deletar/{id}")
-    public ResponseEntity<Void> deletar(
-            @PathVariable Long id) {
-
-        ninjaService.deletarNinja(id);
-
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-    }
-
-    @PutMapping("/alterar/{id}")
-    public ResponseEntity<NinjaDTO> alterar(
+    @PutMapping("/{id}")
+    public ResponseEntity<NinjaResponseDTO> atualizarNinja(
             @PathVariable Long id,
-            @Valid @RequestBody NinjaDTO ninjaAtualizado) {
+            @Valid @RequestBody NinjaRequestDTO ninjaDTO) {
 
-        NinjaDTO ninjaModificado =
-                ninjaService.atualizarNinja(id, ninjaAtualizado);
+        NinjaResponseDTO ninjaAtualizado =
+                ninjaService.atualizarNinja(id, ninjaDTO);
 
-        return ResponseEntity.status(HttpStatus.OK).body(ninjaModificado);
+        return ResponseEntity.ok(ninjaAtualizado);
     }
 
-    @PatchMapping("/{ninjaId}/missao")
-    public ResponseEntity<NinjaDTO> removerMissao(
-            @PathVariable Long ninjaId) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletarNinja(
+            @PathVariable Long id) {
 
-        NinjaDTO ninjaAtualizado =
-                ninjaService.removerMissao(ninjaId);
+        ninjaMissaoService.deletarNinja(id);
 
-        return ResponseEntity.status(HttpStatus.OK).body(ninjaAtualizado);
+        return ResponseEntity.noContent().build();
     }
 }

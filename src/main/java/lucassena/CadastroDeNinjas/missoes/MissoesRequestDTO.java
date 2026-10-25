@@ -1,3 +1,4 @@
+
 package lucassena.CadastroDeNinjas.missoes;
 
 import jakarta.validation.constraints.NotBlank;
@@ -11,16 +12,13 @@ import lucassena.CadastroDeNinjas.util.Rank;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MissoesDTO {
-
-    private Long id;
+public class MissoesRequestDTO {
 
     @NotBlank(message = "Nome é obrigatório")
-    @Size(min = 3, max = 100, message = "Nome deve ter entre 3 e 100 caracteres")
+    @Size(min = 3, max = 100,
+            message = "Nome deve ter entre 3 e 100 caracteres")
     private String nome;
 
     @NotNull(message = "Rank é obrigatório")
     private Rank rank;
-
-    private StatusMissao status;
 }

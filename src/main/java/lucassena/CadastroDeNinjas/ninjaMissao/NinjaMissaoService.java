@@ -1,136 +1,76 @@
+
 package lucassena.CadastroDeNinjas.ninjaMissao;
 
+import lucassena.CadastroDeNinjas.exceptions.RecursoNaoEncontradoException;
 import lucassena.CadastroDeNinjas.exceptions.RegraDeNegocioException;
-import org.springframework.transaction.annotation.Transactional;
-import lucassena.CadastroDeNinjas.missoes.MissoesDTO;
-import lucassena.CadastroDeNinjas.missoes.MissoesMapper;
-import lucassena.CadastroDeNinjas.missoes.MissoesModel;
-import lucassena.CadastroDeNinjas.missoes.MissoesService;
-import lucassena.CadastroDeNinjas.missoes.StatusMissao;
-import lucassena.CadastroDeNinjas.ninjas.NinjaDTO;
-import lucassena.CadastroDeNinjas.ninjas.NinjaMapper;
-import lucassena.CadastroDeNinjas.ninjas.NinjaModel;
-import lucassena.CadastroDeNinjas.ninjas.NinjaService;
+import lucassena.CadastroDeNinjas.missaoStatus.MissaoStatusService;
+import lucassena.CadastroDeNinjas.missoes.*;
+import lucassena.CadastroDeNinjas.ninjas.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 public class NinjaMissaoService {
 
-    private final NinjaService ninjaService;
-    private final MissoesService missoesService;
+    private final NinjaRepository ninjaRepository;
+    private final MissoesRepository missoesRepository;
+    private final MissaoStatusService missaoStatusService;
     private final NinjaMapper ninjaMapper;
     private final MissoesMapper missoesMapper;
 
     public NinjaMissaoService(
-            NinjaService ninjaService,
-            MissoesService missoesService,
+            NinjaRepository ninjaRepository,
+            MissoesRepository missoesRepository,
+            MissaoStatusService missaoStatusService,
             NinjaMapper ninjaMapper,
             MissoesMapper missoesMapper) {
 
-        this.ninjaService = ninjaService;
-        this.missoesService = missoesService;
+        this.ninjaRepository = ninjaRepository;
+        this.missoesRepository = missoesRepository;
+        this.missaoStatusService = missaoStatusService;
         this.ninjaMapper = ninjaMapper;
         this.missoesMapper = missoesMapper;
     }
 
-    @Transactional
-    public NinjaDTO atribuirMissao(Long ninjaId, Long missaoId) {
+    // =========================
+    // ATRIBUIÇÃO
+    // =========================
 
-        NinjaModel ninja = ninjaService.buscarPorId(ninjaId);
+    @Transactional
+    public NinjaResponseDTO atribuirMissao(
+            Long ninjaId, Long missaoId) {
+
+        NinjaModel ninja = buscarNinja(ninjaId);
 
         if (ninja.getMissoes() != null) {
             throw new RegraDeNegocioException(
                     "Ninja já possui uma missão");
         }
 
-        MissoesModel missao = missoesService.buscarPorId(missaoId);
+        MissoesModel missao = buscarMissao(missaoId);
 
-        if (!missaoPodeReceberNinja(missao)) {
-
-            if (missao.getStatus() == StatusMissao.INATIVA) {
-                throw new RegraDeNegocioException(
-                        "Não é possível atribuir Ninja a uma missão inativa");
-            }
-
-            throw new RegraDeNegocioException(
-                    "Não é possível atribuir Ninja a uma missão concluída");
-        }
+        validarMissaoParaReceberNinja(missao);
 
         ninja.setMissoes(missao);
 
-        if (missao.getStatus() == StatusMissao.ATIVA
-                && ninjaQualificadoParaMissao(ninja, missao)) {
+        NinjaModel ninjaSalvo =
+                ninjaRepository.saveAndFlush(ninja);
 
-            missao.setStatus(StatusMissao.EM_CURSO);
-            missoesService.salvar(missao);
-        }
-
-        NinjaModel ninjaSalvo = ninjaService.salvar(ninja);
+        missaoStatusService.reavaliarStatus(missao);
 
         return ninjaMapper.map(ninjaSalvo);
     }
 
-    @Transactional
-    public MissoesDTO inativarMissao(Long id) {
-
-        MissoesModel missao = missoesService.buscarPorId(id);
-
-        if (missao.getStatus() == StatusMissao.CONCLUIDA) {
-            throw new RegraDeNegocioException(
-                    "Não é possível inativar uma missão concluída");
-        }
-
-        missao.setStatus(StatusMissao.INATIVA);
-
-        ninjaService.removerMissaoDosNinjas(missao.getId());
-
-        MissoesModel missaoInativada = missoesService.salvar(missao);
-
-        return missoesMapper.map(missaoInativada);
-    }
+    // =========================
+    // REMOÇÃO DE VÍNCULO
+    // =========================
 
     @Transactional
-    public MissoesDTO concluirMissao(Long id) {
+    public NinjaResponseDTO removerMissao(Long ninjaId) {
 
-        MissoesModel missao = missoesService.buscarPorId(id);
-
-        if (missao.getStatus() != StatusMissao.EM_CURSO) {
-            throw new RegraDeNegocioException(
-                    "Só é possível concluir uma missão em curso");
-        }
-
-        ninjaService.removerMissaoDosNinjas(missao.getId());
-
-        missao.setStatus(StatusMissao.CONCLUIDA);
-
-        MissoesModel missaoConcluida = missoesService.salvar(missao);
-
-        return missoesMapper.map(missaoConcluida);
-    }
-
-    @Transactional
-    public MissoesDTO ativarMissao(Long id) {
-
-        MissoesModel missao = missoesService.buscarPorId(id);
-
-        if (missao.getStatus() != StatusMissao.INATIVA) {
-            throw new RegraDeNegocioException(
-                    "Só é possível ativar uma missão inativa");
-        }
-
-        missao.setStatus(StatusMissao.ATIVA);
-
-        MissoesModel missaoAtivada = missoesService.salvar(missao);
-
-        return missoesMapper.map(missaoAtivada);
-    }
-
-    @Transactional
-    public NinjaDTO removerMissao(Long ninjaId) {
-
-        NinjaModel ninja = ninjaService.buscarPorId(ninjaId);
+        NinjaModel ninja = buscarNinja(ninjaId);
 
         if (ninja.getMissoes() == null) {
             throw new RegraDeNegocioException(
@@ -141,32 +81,22 @@ public class NinjaMissaoService {
 
         ninja.setMissoes(null);
 
-        ninjaService.salvar(ninja);
+        ninjaRepository.saveAndFlush(ninja);
 
-        List<NinjaModel> ninjas =
-                ninjaService.buscarPorMissao(missao.getId());
-
-        boolean existeNinjaQualificado = ninjas.stream()
-                .anyMatch(n ->
-                        ninjaQualificadoParaMissao(n, missao)
-                );
-
-        if (missao.getStatus() == StatusMissao.EM_CURSO
-                && !existeNinjaQualificado) {
-
-            missao.setStatus(StatusMissao.ATIVA);
-
-            missoesService.salvar(missao);
-        }
+        missaoStatusService.reavaliarStatus(missao);
 
         return ninjaMapper.map(ninja);
     }
 
-    @Transactional
-    public NinjaDTO transferirMissao(Long ninjaId, Long novaMissaoId) {
+    // =========================
+    // TRANSFERÊNCIA
+    // =========================
 
-        NinjaModel ninja = ninjaService.buscarPorId(ninjaId);
-        MissoesModel novaMissao = missoesService.buscarPorId(novaMissaoId);
+    @Transactional
+    public NinjaResponseDTO transferirMissao(
+            Long ninjaId, Long novaMissaoId) {
+
+        NinjaModel ninja = buscarNinja(ninjaId);
 
         if (ninja.getMissoes() == null) {
             throw new RegraDeNegocioException(
@@ -174,67 +104,157 @@ public class NinjaMissaoService {
         }
 
         MissoesModel missaoAtual = ninja.getMissoes();
+        MissoesModel novaMissao = buscarMissao(novaMissaoId);
 
         if (missaoAtual.getId().equals(novaMissao.getId())) {
             throw new RegraDeNegocioException(
                     "Ninja já está atribuído a esta missão");
         }
 
-        if (!missaoPodeReceberNinja(novaMissao)) {
+        validarMissaoParaReceberNinja(novaMissao);
 
-            if (novaMissao.getStatus() == StatusMissao.INATIVA) {
-                throw new RegraDeNegocioException(
-                        "Não é possível transferir Ninja para uma missão inativa");
-            }
+        if (missaoAtual.getStatus() == StatusMissao.EM_ANDAMENTO
+                && missaoStatusService.ninjaQualificadoParaMissao(
+                ninja, missaoAtual)
+                && !existeOutroNinjaQualificado(ninja, missaoAtual)) {
 
             throw new RegraDeNegocioException(
-                    "Não é possível transferir Ninja para uma missão concluída");
-        }
-
-        if (missaoAtual.getStatus() == StatusMissao.EM_CURSO) {
-
-            if (!existeOutroNinjaQualificado(ninja, missaoAtual)) {
-                throw new RegraDeNegocioException(
-                        "Ninja não pode ser transferido, pois é o último Ninja qualificado da missão");
-            }
+                    "Transferência não permitida: o ninja é o último qualificado da missão em andamento");
         }
 
         ninja.setMissoes(novaMissao);
 
-        if (novaMissao.getStatus() == StatusMissao.ATIVA
-                && ninjaQualificadoParaMissao(ninja, novaMissao)) {
+        ninjaRepository.saveAndFlush(ninja);
 
-            novaMissao.setStatus(StatusMissao.EM_CURSO);
-        }
-
-        ninjaService.salvar(ninja);
-        missoesService.salvar(novaMissao);
+        missaoStatusService.reavaliarStatus(missaoAtual);
+        missaoStatusService.reavaliarStatus(novaMissao);
 
         return ninjaMapper.map(ninja);
     }
 
-    private boolean missaoPodeReceberNinja(MissoesModel missao) {
+    // =========================
+    // EXCLUSÃO DE NINJA
+    // =========================
 
-        return missao.getStatus() == StatusMissao.ATIVA
-                || missao.getStatus() == StatusMissao.EM_CURSO;
+    @Transactional
+    public void deletarNinja(Long id) {
+
+        NinjaModel ninja = buscarNinja(id);
+
+        MissoesModel missao = ninja.getMissoes();
+
+        ninjaRepository.delete(ninja);
+        ninjaRepository.flush();
+
+        if (missao != null) {
+            missaoStatusService.reavaliarStatus(missao);
+        }
     }
 
-    private boolean ninjaQualificadoParaMissao(
-            NinjaModel ninja,
+    // =========================
+    // INATIVAÇÃO DE MISSÃO
+    // =========================
+
+    @Transactional
+    public MissoesResponseDTO inativarMissao(Long id) {
+
+        MissoesModel missao = buscarMissao(id);
+
+        if (missao.getStatus() == StatusMissao.CONCLUIDA) {
+            throw new RegraDeNegocioException(
+                    "Não é possível inativar uma missão concluída");
+        }
+
+        missao.setStatus(StatusMissao.INATIVA);
+
+        removerTodosOsVinculos(missao.getId());
+
+        MissoesModel missaoSalva =
+                missoesRepository.save(missao);
+
+        return missoesMapper.map(missaoSalva);
+    }
+
+    // =========================
+    // CONCLUSÃO DE MISSÃO
+    // =========================
+
+    @Transactional
+    public MissoesResponseDTO concluirMissao(Long id) {
+
+        MissoesModel missao = buscarMissao(id);
+
+        if (missao.getStatus() != StatusMissao.EM_ANDAMENTO) {
+            throw new RegraDeNegocioException(
+                    "Só é possível concluir uma missão em andamento");
+        }
+
+        missao.setStatus(StatusMissao.CONCLUIDA);
+
+        removerTodosOsVinculos(missao.getId());
+
+        MissoesModel missaoSalva =
+                missoesRepository.save(missao);
+
+        return missoesMapper.map(missaoSalva);
+    }
+
+    // =========================
+    // MÉTODOS AUXILIARES
+    // =========================
+
+    private NinjaModel buscarNinja(Long id) {
+
+        return ninjaRepository.findById(id)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Ninja não encontrado"));
+    }
+
+    private MissoesModel buscarMissao(Long id) {
+
+        return missoesRepository.findById(id)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException(
+                                "Missão não encontrada"));
+    }
+
+    private void validarMissaoParaReceberNinja(
             MissoesModel missao) {
 
-        return ninja.getRank().eMaiorOuIgual(missao.getRank());
+        if (missao.getStatus() == StatusMissao.INATIVA) {
+            throw new RegraDeNegocioException(
+                    "Não é possível atribuir ninja a uma missão inativa");
+        }
+
+        if (missao.getStatus() == StatusMissao.CONCLUIDA) {
+            throw new RegraDeNegocioException(
+                    "Não é possível atribuir ninja a uma missão concluída");
+        }
     }
 
     private boolean existeOutroNinjaQualificado(
-            NinjaModel ninja,
-            MissoesModel missao) {
+            NinjaModel ninja, MissoesModel missao) {
 
         List<NinjaModel> ninjas =
-                ninjaService.buscarPorMissao(missao.getId());
+                ninjaRepository.findByMissoes_Id(missao.getId());
 
         return ninjas.stream()
                 .filter(n -> !n.getId().equals(ninja.getId()))
-                .anyMatch(n -> ninjaQualificadoParaMissao(n, missao));
+                .anyMatch(n ->
+                        missaoStatusService.ninjaQualificadoParaMissao(
+                                n, missao));
+    }
+
+    private void removerTodosOsVinculos(Long missaoId) {
+
+        List<NinjaModel> ninjas =
+                ninjaRepository.findByMissoes_Id(missaoId);
+
+        for (NinjaModel ninja : ninjas) {
+            ninja.setMissoes(null);
+        }
+
+        ninjaRepository.saveAllAndFlush(ninjas);
     }
 }

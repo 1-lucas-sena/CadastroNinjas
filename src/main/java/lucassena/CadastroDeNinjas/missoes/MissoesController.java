@@ -1,3 +1,4 @@
+
 package lucassena.CadastroDeNinjas.missoes;
 
 import jakarta.validation.Valid;
@@ -17,38 +18,75 @@ public class MissoesController {
         this.missoesService = missoesService;
     }
 
-    @GetMapping("/listar")
-    public ResponseEntity<List<MissoesDTO>> listarMissoes() {
-        List<MissoesDTO> missoes = missoesService.listarMissoes();
-        return ResponseEntity.status(HttpStatus.OK).body(missoes);
+    // =========================
+    // CONSULTAS
+    // =========================
+
+    @GetMapping
+    public ResponseEntity<List<MissoesResponseDTO>> listarMissoes() {
+
+        List<MissoesResponseDTO> missoes =
+                missoesService.listarMissoes();
+
+        return ResponseEntity.ok(missoes);
     }
 
-    @GetMapping("/listar/{id}")
-    public ResponseEntity<MissoesDTO> listarMissaoPorId(@PathVariable Long id) {
-        MissoesDTO missao = missoesService.listarMissoesPorId(id);
-        return ResponseEntity.status(HttpStatus.OK).body(missao);
+    @GetMapping("/{id}")
+    public ResponseEntity<MissoesResponseDTO> listarMissaoPorId(
+            @PathVariable Long id) {
+
+        MissoesResponseDTO missao =
+                missoesService.listarMissoesPorId(id);
+
+        return ResponseEntity.ok(missao);
     }
 
-    @PostMapping("/criar")
-    public ResponseEntity<MissoesDTO> criarMissao(@Valid @RequestBody MissoesDTO missaoDTO) {
-        MissoesDTO novaMissao = missoesService.criarMissao(missaoDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novaMissao);
+    // =========================
+    // CRUD
+    // =========================
+
+    @PostMapping
+    public ResponseEntity<MissoesResponseDTO> criarMissao(
+            @Valid @RequestBody MissoesRequestDTO missaoDTO) {
+
+        MissoesResponseDTO novaMissao =
+                missoesService.criarMissao(missaoDTO);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(novaMissao);
     }
 
-    @DeleteMapping("/deletar/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        missoesService.deletarMissao(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-
-    }
-
-    @PutMapping("/alterar/{id}")
-    public ResponseEntity<MissoesDTO> alterar(
+    @PutMapping("/{id}")
+    public ResponseEntity<MissoesResponseDTO> atualizarMissao(
             @PathVariable Long id,
-            @Valid @RequestBody MissoesDTO missaoAtualizada) {
-        MissoesDTO missaoModificada = missoesService.atualizarMissao(id, missaoAtualizada);
-        return ResponseEntity.status(HttpStatus.OK).body(missaoModificada);
+            @Valid @RequestBody MissoesRequestDTO missaoDTO) {
 
+        MissoesResponseDTO missaoAtualizada =
+                missoesService.atualizarMissao(id, missaoDTO);
+
+        return ResponseEntity.ok(missaoAtualizada);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletarMissao(
+            @PathVariable Long id) {
+
+        missoesService.deletarMissao(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    // =========================
+    // ATIVAÇÃO
+    // =========================
+
+    @PatchMapping("/{id}/ativar")
+    public ResponseEntity<MissoesResponseDTO> ativarMissao(
+            @PathVariable Long id) {
+
+        MissoesResponseDTO missaoAtivada =
+                missoesService.ativarMissao(id);
+
+        return ResponseEntity.ok(missaoAtivada);
+    }
 }
