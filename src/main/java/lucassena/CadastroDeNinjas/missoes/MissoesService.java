@@ -1,7 +1,12 @@
+
 package lucassena.CadastroDeNinjas.missoes;
 
 import lucassena.CadastroDeNinjas.exceptions.RecursoNaoEncontradoException;
+import lucassena.CadastroDeNinjas.exceptions.RegraDeNegocioException;
+import lucassena.CadastroDeNinjas.missaoStatus.MissaoStatusService;
+import lucassena.CadastroDeNinjas.ninjas.NinjaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -10,20 +15,27 @@ public class MissoesService {
 
     private final MissoesRepository missoesRepository;
     private final MissoesMapper missoesMapper;
+    private final NinjaRepository ninjaRepository;
+    private final MissaoStatusService missaoStatusService;
 
     public MissoesService(
             MissoesRepository missoesRepository,
-            MissoesMapper missoesMapper) {
+            MissoesMapper missoesMapper,
+            NinjaRepository ninjaRepository,
+            MissaoStatusService missaoStatusService) {
 
         this.missoesRepository = missoesRepository;
         this.missoesMapper = missoesMapper;
+        this.ninjaRepository = ninjaRepository;
+        this.missaoStatusService = missaoStatusService;
     }
 
     // =========================
     // CONSULTAS
     // =========================
 
-    public List<MissoesDTO> listarMissoes() {
+    @Transactional(readOnly = true)
+    public List<MissoesResponseDTO> listarMissoes() {
 
         List<MissoesModel> missoes = missoesRepository.findAll();
 
@@ -32,7 +44,8 @@ public class MissoesService {
                 .toList();
     }
 
-    public MissoesDTO listarMissoesPorId(Long id) {
+    @Transactional(readOnly = true)
+    public MissoesResponseDTO listarMissoesPorId(Long id) {
 
         MissoesModel missao = buscarPorId(id);
 
@@ -43,22 +56,12 @@ public class MissoesService {
     // CRUD
     // =========================
 
-    public MissoesDTO criarMissao(MissoesDTO missaoDTO) {
+    public MissoesResponseDTO criarMissao(
+            MissoesRequestDTO missaoDTO) {
 
         MissoesModel missao = missoesMapper.map(missaoDTO);
 
-        missao.setStatus(StatusMissao.ATIVA);
-
-        MissoesModel missaoSalva = missoesRepository.save(missao);
-
-        return missoesMapper.map(missaoSalva);
-    }
-
-    public MissoesDTO atualizarMissao(Long id, MissoesDTO missaoDTO) {
-
-        MissoesModel missao = buscarPorId(id);
-        missao.setNome(missaoDTO.getNome());
-        missao.setRank(missaoDTO.getRank());
+        missao.setStatus(StatusMissao.DISPONIVEL);
 
         MissoesModel missaoSalva =
                 missoesRepository.save(missao);
@@ -66,30 +69,68 @@ public class MissoesService {
         return missoesMapper.map(missaoSalva);
     }
 
+    @Transactional
+    public MissoesResponseDTO atualizarMissao(
+            Long id,
+            MissoesRequestDTO missaoDTO) {
+
+        MissoesModel missao = buscarPorId(id);
+
+        missao.setNome(missaoDTO.getNome());
+        missao.setRank(missaoDTO.getRank());
+
+        MissoesModel missaoSalva =
+                missoesRepository.save(missao);
+
+        missaoStatusService.reavaliarStatus(missaoSalva);
+
+        return missoesMapper.map(missaoSalva);
+    }
+
+    @Transactional
     public void deletarMissao(Long id) {
 
-        if (!missoesRepository.existsById(id)) {
-            throw new RecursoNaoEncontradoException(
-                    "Missão não encontrada");
+        MissoesModel missao = buscarPorId(id);
+
+        if (ninjaRepository.existsByMissoes_Id(id)) {
+            throw new RegraDeNegocioException(
+                    "Não é possível excluir uma missão que possui ninjas vinculados");
         }
 
-        missoesRepository.deleteById(id);
+        missoesRepository.delete(missao);
+    }
+
+    // =========================
+    // ATIVAÇÃO
+    // =========================
+
+    @Transactional
+    public MissoesResponseDTO ativarMissao(Long id) {
+
+        MissoesModel missao = buscarPorId(id);
+
+        if (missao.getStatus() != StatusMissao.INATIVA) {
+            throw new RegraDeNegocioException(
+                    "Só é possível ativar uma missão inativa");
+        }
+
+        missao.setStatus(StatusMissao.DISPONIVEL);
+
+        MissoesModel missaoAtivada =
+                missoesRepository.save(missao);
+
+        return missoesMapper.map(missaoAtivada);
     }
 
     // =========================
     // MÉTODOS INTERNOS
     // =========================
 
-    public MissoesModel buscarPorId(Long id) {
+    private MissoesModel buscarPorId(Long id) {
 
         return missoesRepository.findById(id)
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException(
                                 "Missão não encontrada"));
-    }
-
-    public MissoesModel salvar(MissoesModel missao) {
-
-        return missoesRepository.save(missao);
     }
 }

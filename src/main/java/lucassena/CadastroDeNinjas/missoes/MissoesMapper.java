@@ -1,3 +1,4 @@
+
 package lucassena.CadastroDeNinjas.missoes;
 
 import org.springframework.stereotype.Component;
@@ -5,21 +6,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class MissoesMapper {
 
-    public MissoesModel map(MissoesDTO missoesDTO) {
+    public MissoesModel map(MissoesRequestDTO missoesDTO) {
 
         MissoesModel missoesModel = new MissoesModel();
 
-        missoesModel.setId(missoesDTO.getId());
         missoesModel.setNome(missoesDTO.getNome());
         missoesModel.setRank(missoesDTO.getRank());
-        missoesModel.setStatus(missoesDTO.getStatus());
 
         return missoesModel;
     }
 
-    public MissoesDTO map(MissoesModel missoesModel) {
+    public MissoesResponseDTO map(MissoesModel missoesModel) {
 
-        MissoesDTO missoesDTO = new MissoesDTO();
+        MissoesResponseDTO missoesDTO = new MissoesResponseDTO();
 
         missoesDTO.setId(missoesModel.getId());
         missoesDTO.setNome(missoesModel.getNome());

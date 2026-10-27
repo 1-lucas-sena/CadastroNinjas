@@ -1,3 +1,4 @@
+
 package lucassena.CadastroDeNinjas.ninjas;
 
 import jakarta.validation.constraints.*;
@@ -9,12 +10,11 @@ import lucassena.CadastroDeNinjas.util.Rank;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class NinjaDTO {
-
-    private Long id;
+public class NinjaRequestDTO {
 
     @NotBlank(message = "Nome é obrigatório")
-    @Size(min = 3, max = 100, message = "Nome deve ter entre 3 e 100 caracteres")
+    @Size(min = 3, max = 100,
+            message = "Nome deve ter entre 3 e 100 caracteres")
     private String nome;
 
     @NotBlank(message = "Email é obrigatório")
@@ -27,6 +27,4 @@ public class NinjaDTO {
 
     @NotNull(message = "Rank é obrigatório")
     private Rank rank;
-
-    private Long missaoId;
 }

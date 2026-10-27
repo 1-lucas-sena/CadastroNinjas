@@ -1,83 +1,93 @@
+
 package lucassena.CadastroDeNinjas.ninjaMissao;
 
-import lucassena.CadastroDeNinjas.missoes.MissoesDTO;
-import lucassena.CadastroDeNinjas.ninjas.NinjaDTO;
-import org.springframework.http.HttpStatus;
+import lucassena.CadastroDeNinjas.missoes.MissoesResponseDTO;
+import lucassena.CadastroDeNinjas.ninjas.NinjaResponseDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/ninja-missao")
 public class NinjaMissaoController {
 
     private final NinjaMissaoService ninjaMissaoService;
 
-    public NinjaMissaoController(NinjaMissaoService ninjaMissaoService) {
+    public NinjaMissaoController(
+            NinjaMissaoService ninjaMissaoService) {
+
         this.ninjaMissaoService = ninjaMissaoService;
     }
 
+    // =========================
+    // ATRIBUIÇÃO
+    // =========================
+
     @PatchMapping("/ninjas/{ninjaId}/missoes/{missaoId}")
-    public ResponseEntity<NinjaDTO> atribuirMissao(
+    public ResponseEntity<NinjaResponseDTO> atribuirMissao(
             @PathVariable Long ninjaId,
             @PathVariable Long missaoId) {
 
-        NinjaDTO ninjaAtualizado =
+        NinjaResponseDTO ninjaAtualizado =
                 ninjaMissaoService.atribuirMissao(ninjaId, missaoId);
 
-        return ResponseEntity.status(HttpStatus.OK).body(ninjaAtualizado);
+        return ResponseEntity.ok(ninjaAtualizado);
     }
 
-    @PatchMapping("/ninjas/{ninjaId}/missao")
-    public ResponseEntity<NinjaDTO> removerMissao(
+    // =========================
+    // REMOÇÃO
+    // =========================
+
+    @DeleteMapping("/ninjas/{ninjaId}/missao")
+    public ResponseEntity<NinjaResponseDTO> removerMissao(
             @PathVariable Long ninjaId) {
 
-        NinjaDTO ninjaAtualizado =
+        NinjaResponseDTO ninjaAtualizado =
                 ninjaMissaoService.removerMissao(ninjaId);
 
-        return ResponseEntity.status(HttpStatus.OK).body(ninjaAtualizado);
+        return ResponseEntity.ok(ninjaAtualizado);
     }
 
-    @PatchMapping("/missoes/{id}/inativar")
-    public ResponseEntity<MissoesDTO> inativarMissao(
-            @PathVariable Long id) {
+    // =========================
+    // TRANSFERÊNCIA
+    // =========================
 
-        MissoesDTO missaoInativada =
-                ninjaMissaoService.inativarMissao(id);
-
-        return ResponseEntity.status(HttpStatus.OK).body(missaoInativada);
-    }
-
-    @PatchMapping("/missoes/{id}/concluir")
-    public ResponseEntity<MissoesDTO> concluirMissao(
-            @PathVariable Long id) {
-
-        MissoesDTO missaoConcluida =
-                ninjaMissaoService.concluirMissao(id);
-
-        return ResponseEntity.status(HttpStatus.OK).body(missaoConcluida);
-    }
-
-    @PatchMapping("/missoes/{id}/ativar")
-    public ResponseEntity<MissoesDTO> ativarMissao(
-            @PathVariable Long id) {
-
-        MissoesDTO missaoAtivada =
-                ninjaMissaoService.ativarMissao(id);
-
-        return ResponseEntity.status(HttpStatus.OK).body(missaoAtivada);
-    }
-
-    @PatchMapping("/ninjas/{ninjaId}/transferir/{novaMissaoId}")
-    public ResponseEntity<NinjaDTO> transferirMissao(
+    @PatchMapping("/ninjas/{ninjaId}/transferencias/{novaMissaoId}")
+    public ResponseEntity<NinjaResponseDTO> transferirMissao(
             @PathVariable Long ninjaId,
             @PathVariable Long novaMissaoId) {
 
-        NinjaDTO ninjaAtualizado =
+        NinjaResponseDTO ninjaAtualizado =
                 ninjaMissaoService.transferirMissao(
-                        ninjaId,
-                        novaMissaoId);
+                        ninjaId, novaMissaoId);
 
-        return ResponseEntity.status(HttpStatus.OK).body(ninjaAtualizado);
+        return ResponseEntity.ok(ninjaAtualizado);
+    }
+
+    // =========================
+    // INATIVAÇÃO
+    // =========================
+
+    @PatchMapping("/missoes/{id}/inativar")
+    public ResponseEntity<MissoesResponseDTO> inativarMissao(
+            @PathVariable Long id) {
+
+        MissoesResponseDTO missaoInativada =
+                ninjaMissaoService.inativarMissao(id);
+
+        return ResponseEntity.ok(missaoInativada);
+    }
+
+    // =========================
+    // CONCLUSÃO
+    // =========================
+
+    @PatchMapping("/missoes/{id}/concluir")
+    public ResponseEntity<MissoesResponseDTO> concluirMissao(
+            @PathVariable Long id) {
+
+        MissoesResponseDTO missaoConcluida =
+                ninjaMissaoService.concluirMissao(id);
+
+        return ResponseEntity.ok(missaoConcluida);
     }
 
 }
