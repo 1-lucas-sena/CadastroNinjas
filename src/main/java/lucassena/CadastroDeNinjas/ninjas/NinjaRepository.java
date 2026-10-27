@@ -11,4 +11,8 @@ public interface NinjaRepository
     List<NinjaModel> findByMissoes_Id(Long missaoId);
 
     boolean existsByMissoes_Id(Long missaoId);
+
+    boolean existsByEmail(String email);
+
+    boolean existsByEmailAndIdNot(String email, Long id);
 }
