@@ -8,6 +8,7 @@ import lucassena.CadastroDeNinjas.missoes.MissoesRepository;
 import lucassena.CadastroDeNinjas.missoes.StatusMissao;
 import lucassena.CadastroDeNinjas.ninjas.NinjaModel;
 import lucassena.CadastroDeNinjas.ninjas.NinjaRepository;
+import lucassena.CadastroDeNinjas.ninjas.NinjaResponseDTO;
 import lucassena.CadastroDeNinjas.util.Rank;
 
 import org.junit.jupiter.api.Test;
@@ -1760,4 +1761,84 @@ class NinjaMissaoServiceTest {
 
         return id;
     }
+
+
+    @Test
+    void devePermitirTransferenciaDeNinjaNaoQualificadoDeMissaoEmAndamento() {
+
+        // ARRANGE
+        MissoesModel missaoOrigem = new MissoesModel();
+        missaoOrigem.setNome("Missão de origem");
+        missaoOrigem.setRank(Rank.B);
+        missaoOrigem.setStatus(StatusMissao.EM_ANDAMENTO);
+        missaoOrigem = missoesRepository.saveAndFlush(missaoOrigem);
+
+        MissoesModel missaoDestino = new MissoesModel();
+        missaoDestino.setNome("Missão de destino");
+        missaoDestino.setRank(Rank.C);
+        missaoDestino.setStatus(StatusMissao.DISPONIVEL);
+        missaoDestino = missoesRepository.saveAndFlush(missaoDestino);
+
+        NinjaModel ninjaQualificado = new NinjaModel();
+        ninjaQualificado.setNome("Ninja Qualificado");
+        ninjaQualificado.setEmail("qualificado.cobertura@example.com");
+        ninjaQualificado.setIdade(25);
+        ninjaQualificado.setRank(Rank.A);
+        ninjaQualificado.setMissoes(missaoOrigem);
+        ninjaRepository.saveAndFlush(ninjaQualificado);
+
+        NinjaModel ninjaNaoQualificado = new NinjaModel();
+        ninjaNaoQualificado.setNome("Ninja Não Qualificado");
+        ninjaNaoQualificado.setEmail("naoqualificado.cobertura@example.com");
+        ninjaNaoQualificado.setIdade(20);
+        ninjaNaoQualificado.setRank(Rank.D);
+        ninjaNaoQualificado.setMissoes(missaoOrigem);
+        ninjaNaoQualificado = ninjaRepository.saveAndFlush(ninjaNaoQualificado);
+
+        Long ninjaId = ninjaNaoQualificado.getId();
+        Long missaoOrigemId = missaoOrigem.getId();
+        Long missaoDestinoId = missaoDestino.getId();
+
+        // ACT
+        NinjaResponseDTO resultado = ninjaMissaoService.transferirMissao(
+                ninjaId,
+                missaoDestinoId
+        );
+
+        // ASSERT - Verificar retorno
+        assertEquals(ninjaId, resultado.getId());
+        assertEquals(missaoDestinoId, resultado.getMissaoId());
+
+        // Confirmar persistência
+        entityManager.flush();
+        entityManager.clear();
+
+        NinjaModel ninjaTransferido = ninjaRepository
+                .findById(ninjaId)
+                .orElseThrow();
+
+        MissoesModel origemAtualizada = missoesRepository
+                .findById(missaoOrigemId)
+                .orElseThrow();
+
+        MissoesModel destinoAtualizada = missoesRepository
+                .findById(missaoDestinoId)
+                .orElseThrow();
+
+        assertEquals(
+                missaoDestinoId,
+                ninjaTransferido.getMissoes().getId()
+        );
+
+        assertEquals(
+                StatusMissao.EM_ANDAMENTO,
+                origemAtualizada.getStatus()
+        );
+
+        assertEquals(
+                StatusMissao.DISPONIVEL,
+                destinoAtualizada.getStatus()
+        );
+    }
+
 }

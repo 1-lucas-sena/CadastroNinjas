@@ -280,6 +280,47 @@ class GlobalExceptionHandlerTest {
     }
 
 
+    @Test
+    void deveRetornar400QuandoTipoDeCampoNaoEnumEInvalido()
+            throws Exception {
+
+        // ARRANGE
+        String json = """
+            {
+                "nome": "Naruto Uzumaki",
+                "email": "naruto.tipo.invalido@example.com",
+                "idade": "vinte",
+                "rank": "A"
+            }
+            """;
+
+        long quantidadeAntes = ninjaRepository.count();
+
+        // ACT + ASSERT
+        mockMvc.perform(
+                        post("/ninjas")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(json)
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(
+                        MediaType.APPLICATION_JSON
+                ))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message")
+                        .value("JSON inválido ou malformado."));
+
+        // ASSERT - Nenhum ninja deve ser criado
+        assertEquals(
+                quantidadeAntes,
+                ninjaRepository.count()
+        );
+    }
+
+
+
 
 
 
