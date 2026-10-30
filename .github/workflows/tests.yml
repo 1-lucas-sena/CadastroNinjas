@@ -1,15 +1,16 @@
 
 name: Testes automatizados
 
+
 on:
   push:
     branches:
-      - main
-      - test/testes-integracao
+      - '**'
 
   pull_request:
     branches:
       - main
+
 
 permissions:
   contents: read
