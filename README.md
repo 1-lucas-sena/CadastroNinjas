@@ -138,6 +138,100 @@ As configurações podem ser consultadas em:
 | `PATCH` | `/missoes/{id}/inativar` | Inativar missão |
 | `PATCH` | `/missoes/{id}/concluir` | Concluir missão |
 
+
+## Paginação e ordenação
+
+Os endpoints de listagem de ninjas e missões oferecem suporte à paginação e ordenação utilizando o Spring Data JPA.
+
+### Endpoints
+
+- `GET /ninjas`
+- `GET /missoes`
+
+### Parâmetros disponíveis
+
+| Parâmetro | Descrição | Valor padrão |
+| --- | --- | --- |
+| `page` | Número da página, começando em zero | `0` |
+| `size` | Quantidade de registros por página | `10` |
+| `sort` | Campo e direção da ordenação | `id,asc` |
+
+### Exemplos de requisições
+
+Listar os dez primeiros ninjas, ordenados pelo ID:
+
+```http
+GET /ninjas?page=0&size=10
+```
+
+Listar a segunda página de ninjas, com três registros por página, em ordem alfabética:
+
+```http
+GET /ninjas?page=1&size=3&sort=nome,asc
+```
+
+Listar a primeira página de missões, ordenadas pelo nome:
+
+```http
+GET /missoes?page=0&size=5&sort=nome,asc
+```
+
+### Estrutura da resposta
+
+As listagens retornam um objeto JSON paginado, contendo os registros no campo `content` e os metadados necessários para navegar entre as páginas.
+
+Exemplo ilustrativo de uma resposta de `GET /ninjas?page=0&size=2&sort=nome,asc`:
+
+```json
+{
+  "content": [
+    {
+      "id": 1,
+      "nome": "Naruto",
+      "email": "naruto@konoha.com",
+      "idade": 17,
+      "rank": "A",
+      "missaoId": null
+    },
+    {
+      "id": 2,
+      "nome": "Sasuke",
+      "email": "sasuke@konoha.com",
+      "idade": 18,
+      "rank": "S",
+      "missaoId": null
+    }
+  ],
+  "number": 0,
+  "size": 2,
+  "numberOfElements": 2,
+  "totalElements": 2,
+  "totalPages": 1,
+  "first": true,
+  "last": true,
+  "empty": false
+}
+```
+
+O JSON acima apresenta os principais campos da resposta. O Spring Data também pode incluir informações adicionais, como `pageable` e `sort`.
+
+### Metadados da paginação
+
+| Campo | Descrição |
+| --- | --- |
+| `content` | Registros da página solicitada |
+| `number` | Número da página atual |
+| `size` | Tamanho configurado da página |
+| `numberOfElements` | Quantidade de registros retornados na página |
+| `totalElements` | Quantidade total de registros disponíveis |
+| `totalPages` | Quantidade total de páginas |
+| `first` | Indica se é a primeira página |
+| `last` | Indica se é a última página |
+| `empty` | Indica se a página está vazia |
+
+**Observação:** a paginação altera o formato das respostas dos endpoints de listagem. Em vez de um array JSON diretamente na raiz, os registros passam a ser retornados dentro do campo `content`.
+```
+
 ## Códigos de resposta HTTP
 
 A API utiliza os seguintes códigos de resposta:
@@ -250,7 +344,7 @@ Como o ninja possui rank `A` e a missão exige rank `B`, ele é considerado qual
 
 ### Exemplo de erro de validação
 
-Ao tentar cadastrar um ninja com nome vazio, idade negativa e e-mail inválido, a API responde com `400 Bad Request`.
+Ao tentar cadastrar um ninja com nome de apenas dois caracteres, idade negativa e e-mail inválido, a API responde com `400 Bad Request`.
 
 **Requisição**
 
@@ -323,7 +417,7 @@ A API impede o cadastro de ninjas com e-mails duplicados, considerando a normali
 
 ## Testes automatizados
 
-O projeto conta com **166 testes automatizados**, abrangendo serviços, controllers, regras de negócio, validação de dados, persistência e tratamento de exceções.
+O projeto conta com **167 testes automatizados**, abrangendo serviços, controllers, regras de negócio, validação de dados, persistência e tratamento de exceções.
 
 Os testes utilizam **JUnit 5, Spring Boot Test, MockMvc e H2 em memória**, permitindo validar o funcionamento da aplicação em um ambiente isolado.
 
