@@ -44,6 +44,7 @@ class MissoesControllerTest {
     @Autowired
     private NinjaRepository ninjaRepository;
 
+
     @Test
     void deveListarMissoesComStatus200() throws Exception {
 
@@ -66,18 +67,82 @@ class MissoesControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(
                         MediaType.APPLICATION_JSON
                 ))
-                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$.content.length()").value(2))
 
                 // Conferir a primeira missão pelo ID
                 .andExpect(jsonPath(
-                        "$[?(@.id == " + missao1.getId() + ")].nome"
+                        "$.content[?(@.id == " + missao1.getId() + ")].nome"
                 ).value(org.hamcrest.Matchers.hasItem("Missão de resgate")))
 
                 // Conferir a segunda missão pelo ID
                 .andExpect(jsonPath(
-                        "$[?(@.id == " + missao2.getId() + ")].nome"
-                ).value(org.hamcrest.Matchers.hasItem("Missão de reconhecimento")));
+                        "$.content[?(@.id == " + missao2.getId() + ")].nome"
+                ).value(org.hamcrest.Matchers.hasItem("Missão de reconhecimento")))
+
+                // Conferir paginação padrão
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(true));
     }
+
+
+    @Test
+    void devePaginarMissoesComOrdenacaoPorNome() throws Exception {
+
+        // ARRANGE
+        criarMissao(
+                "Missão Zeta",
+                Rank.S,
+                StatusMissao.DISPONIVEL
+        );
+
+        criarMissao(
+                "Missão Alfa",
+                Rank.B,
+                StatusMissao.INATIVA
+        );
+
+        criarMissao(
+                "Missão Beta",
+                Rank.A,
+                StatusMissao.EM_ANDAMENTO
+        );
+
+        // ACT + ASSERT - Primeira página
+        mockMvc.perform(get("/missoes")
+                        .param("page", "0")
+                        .param("size", "2")
+                        .param("sort", "nome,asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].nome").value("Missão Alfa"))
+                .andExpect(jsonPath("$.content[1].nome").value("Missão Beta"))
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(2))
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(false));
+
+        // ACT + ASSERT - Segunda página
+        mockMvc.perform(get("/missoes")
+                        .param("page", "1")
+                        .param("size", "2")
+                        .param("sort", "nome,asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].nome").value("Missão Zeta"))
+                .andExpect(jsonPath("$.number").value(1))
+                .andExpect(jsonPath("$.size").value(2))
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.first").value(false))
+                .andExpect(jsonPath("$.last").value(true));
+    }
+
 
     @Test
     void deveRetornarListaVaziaQuandoNaoExistiremMissoes() throws Exception {
@@ -91,9 +156,15 @@ class MissoesControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(
                         MediaType.APPLICATION_JSON
                 ))
-                .andExpect(content().json("[]"))
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.empty").value(true))
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0));
     }
+
 
     @Test
     void deveBuscarMissaoPorIdComStatus200() throws Exception {

@@ -35,6 +35,7 @@ class NinjaControllerTest {
     @Autowired
     private EntityManager entityManager;
 
+
     @Test
     void deveListarNinjasComStatus200() throws Exception {
 
@@ -56,12 +57,20 @@ class NinjaControllerTest {
         // ACT + ASSERT
         mockMvc.perform(get("/ninjas"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].id").value(ninja1.getId()))
-                .andExpect(jsonPath("$[0].nome").value("Naruto"))
-                .andExpect(jsonPath("$[1].id").value(ninja2.getId()))
-                .andExpect(jsonPath("$[1].nome").value("Sasuke"));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].id").value(ninja1.getId()))
+                .andExpect(jsonPath("$.content[0].nome").value("Naruto"))
+                .andExpect(jsonPath("$.content[1].id").value(ninja2.getId()))
+                .andExpect(jsonPath("$.content[1].nome").value("Sasuke"))
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(true));
     }
+
+
 
     @Test
     void deveRetornarListaVaziaQuandoNaoExistiremNinjas() throws Exception {
@@ -72,34 +81,74 @@ class NinjaControllerTest {
         // ACT + ASSERT
         mockMvc.perform(get("/ninjas"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("[]"))
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.empty").value(true))
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0));
     }
 
+
     @Test
-    void deveBuscarNinjaPorIdComStatus200() throws Exception {
+    void devePaginarNinjasComOrdenacaoPorNome() throws Exception {
 
         // ARRANGE
-        NinjaModel ninja = criarNinja(
+        criarNinja(
+                "Sasuke",
+                "sasuke.paginacao@example.com",
+                18,
+                Rank.S
+        );
+
+        criarNinja(
+                "Naruto",
+                "naruto.paginacao@example.com",
+                17,
+                Rank.A
+        );
+
+        NinjaModel ninja3 = criarNinja(
                 "Kakashi",
-                "kakashi.controller@example.com",
+                "kakashi.paginacao@example.com",
                 30,
                 Rank.A
         );
 
-        Long ninjaId = ninja.getId();
-
-        // ACT + ASSERT
-        mockMvc.perform(get("/ninjas/{id}", ninjaId))
+        // ACT + ASSERT - Primeira página
+        mockMvc.perform(get("/ninjas")
+                        .param("page", "0")
+                        .param("size", "2")
+                        .param("sort", "nome,asc"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(ninjaId))
-                .andExpect(jsonPath("$.nome").value("Kakashi"))
-                .andExpect(jsonPath("$.email")
-                        .value("kakashi.controller@example.com"))
-                .andExpect(jsonPath("$.idade").value(30))
-                .andExpect(jsonPath("$.rank").value("A"))
-                .andExpect(jsonPath("$.missaoId").isEmpty());
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].id").value(ninja3.getId()))
+                .andExpect(jsonPath("$.content[0].nome").value("Kakashi"))
+                .andExpect(jsonPath("$.content[1].nome").value("Naruto"))
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(2))
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(false));
+
+        // ACT + ASSERT - Segunda página
+        mockMvc.perform(get("/ninjas")
+                        .param("page", "1")
+                        .param("size", "2")
+                        .param("sort", "nome,asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].nome").value("Sasuke"))
+                .andExpect(jsonPath("$.number").value(1))
+                .andExpect(jsonPath("$.size").value(2))
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.first").value(false))
+                .andExpect(jsonPath("$.last").value(true));
     }
+
 
     @Test
     void naoDeveBuscarNinjaPorIdInexistente() throws Exception {

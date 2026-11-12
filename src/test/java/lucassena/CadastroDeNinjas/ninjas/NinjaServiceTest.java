@@ -14,6 +14,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,6 +40,7 @@ class NinjaServiceTest {
     @Autowired
     private EntityManager entityManager;
 
+
     @Test
     void deveListarNinjasCadastrados() {
 
@@ -53,20 +59,30 @@ class NinjaServiceTest {
                 Rank.S
         );
 
+        Pageable pageable = PageRequest.of(
+                0, 10, Sort.by("id").ascending()
+        );
+
         // ACT
-        List<NinjaResponseDTO> resultado = ninjaService.listarNinjas();
+        Page<NinjaResponseDTO> resultado =
+                ninjaService.listarNinjas(pageable);
 
         // ASSERT
-        assertEquals(2, resultado.size());
+        assertNotNull(resultado);
+        assertEquals(2, resultado.getTotalElements());
+        assertEquals(1, resultado.getTotalPages());
+        assertEquals(2, resultado.getContent().size());
+        assertEquals(0, resultado.getNumber());
+        assertEquals(10, resultado.getSize());
 
-        assertTrue(resultado.stream()
+        assertTrue(resultado.getContent().stream()
                 .anyMatch(ninja ->
                         ninja.getId().equals(ninja1.getId())
                                 && ninja.getNome().equals("Naruto")
                                 && ninja.getRank() == Rank.A
                 ));
 
-        assertTrue(resultado.stream()
+        assertTrue(resultado.getContent().stream()
                 .anyMatch(ninja ->
                         ninja.getId().equals(ninja2.getId())
                                 && ninja.getNome().equals("Sasuke")
@@ -74,19 +90,31 @@ class NinjaServiceTest {
                 ));
     }
 
+
+
     @Test
     void deveRetornarListaVaziaQuandoNaoExistiremNinjas() {
 
         // ARRANGE
         assertEquals(0, ninjaRepository.count());
 
+        Pageable pageable = PageRequest.of(
+                0, 10, Sort.by("id").ascending()
+        );
+
         // ACT
-        List<NinjaResponseDTO> resultado = ninjaService.listarNinjas();
+        Page<NinjaResponseDTO> resultado =
+                ninjaService.listarNinjas(pageable);
 
         // ASSERT
         assertNotNull(resultado);
         assertTrue(resultado.isEmpty());
+        assertEquals(0, resultado.getTotalElements());
+        assertEquals(0, resultado.getTotalPages());
+        assertEquals(0, resultado.getNumber());
+        assertEquals(10, resultado.getSize());
     }
+
 
     @Test
     void deveBuscarNinjaPorIdExistente() {
