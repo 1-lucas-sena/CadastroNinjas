@@ -14,8 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -49,6 +52,7 @@ class MissoesServiceTest {
         return missoesRepository.saveAndFlush(missao);
     }
 
+
     @Test
     void deveListarMissoesCadastradas() {
 
@@ -65,14 +69,24 @@ class MissoesServiceTest {
                 StatusMissao.INATIVA
         );
 
-        // ACT - Listar missões
-        List<MissoesResponseDTO> resultado = missoesService.listarMissoes();
+        Pageable pageable = PageRequest.of(
+                0, 10, Sort.by("id").ascending()
+        );
 
-        // ASSERT - Verificar quantidade
-        assertEquals(2, resultado.size());
+        // ACT - Listar missões
+        Page<MissoesResponseDTO> resultado =
+                missoesService.listarMissoes(pageable);
+
+        // ASSERT - Verificar paginação
+        assertNotNull(resultado);
+        assertEquals(2, resultado.getTotalElements());
+        assertEquals(1, resultado.getTotalPages());
+        assertEquals(2, resultado.getContent().size());
+        assertEquals(0, resultado.getNumber());
+        assertEquals(10, resultado.getSize());
 
         // Verificar os dados da primeira missão
-        assertTrue(resultado.stream()
+        assertTrue(resultado.getContent().stream()
                 .anyMatch(missao ->
                         missao.getId().equals(missao1.getId())
                                 && missao.getNome().equals("Missão de resgate")
@@ -81,7 +95,7 @@ class MissoesServiceTest {
                 ));
 
         // Verificar os dados da segunda missão
-        assertTrue(resultado.stream()
+        assertTrue(resultado.getContent().stream()
                 .anyMatch(missao ->
                         missao.getId().equals(missao2.getId())
                                 && missao.getNome().equals("Missão de reconhecimento")
@@ -90,19 +104,31 @@ class MissoesServiceTest {
                 ));
     }
 
+
+
     @Test
     void deveRetornarListaVaziaQuandoNaoExistiremMissoes() {
 
         // ARRANGE - Confirmar que não existem missões
         assertEquals(0, missoesRepository.count());
 
+        Pageable pageable = PageRequest.of(
+                0, 10, Sort.by("id").ascending()
+        );
+
         // ACT
-        List<MissoesResponseDTO> resultado = missoesService.listarMissoes();
+        Page<MissoesResponseDTO> resultado =
+                missoesService.listarMissoes(pageable);
 
         // ASSERT
         assertNotNull(resultado);
         assertTrue(resultado.isEmpty());
+        assertEquals(0, resultado.getTotalElements());
+        assertEquals(0, resultado.getTotalPages());
+        assertEquals(0, resultado.getNumber());
+        assertEquals(10, resultado.getSize());
     }
+
 
     @Test
     void deveBuscarMissaoPorIdExistente() {

@@ -5,8 +5,11 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
-import java.util.List;
+
 
 @RestController
 @RequestMapping("/missoes")
@@ -22,14 +25,17 @@ public class MissoesController {
     // CONSULTAS
     // =========================
 
-    @GetMapping
-    public ResponseEntity<List<MissoesResponseDTO>> listarMissoes() {
 
-        List<MissoesResponseDTO> missoes =
-                missoesService.listarMissoes();
+    @GetMapping
+    public ResponseEntity<Page<MissoesResponseDTO>> listarMissoes(
+            @PageableDefault(size = 10, sort = "id") Pageable pageable) {
+
+        Page<MissoesResponseDTO> missoes =
+                missoesService.listarMissoes(pageable);
 
         return ResponseEntity.ok(missoes);
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<MissoesResponseDTO> listarMissaoPorId(
