@@ -7,6 +7,8 @@ import lucassena.CadastroDeNinjas.missaoStatus.MissaoStatusService;
 import lucassena.CadastroDeNinjas.ninjas.NinjaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -34,15 +36,14 @@ public class MissoesService {
     // CONSULTAS
     // =========================
 
+
     @Transactional(readOnly = true)
-    public List<MissoesResponseDTO> listarMissoes() {
+    public Page<MissoesResponseDTO> listarMissoes(Pageable pageable) {
 
-        List<MissoesModel> missoes = missoesRepository.findAll();
-
-        return missoes.stream()
-                .map(missoesMapper::map)
-                .toList();
+        return missoesRepository.findAll(pageable)
+                .map(missoesMapper::map);
     }
+
 
     @Transactional(readOnly = true)
     public MissoesResponseDTO listarMissoesPorId(Long id) {
