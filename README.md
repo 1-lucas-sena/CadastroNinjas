@@ -215,7 +215,9 @@ GET /missoes?page=0&size=5&sort=nome,asc
 
 ### Estrutura da resposta
 
-As listagens retornam um objeto JSON paginado, contendo os registros no campo `content` e os metadados necessários para navegar entre as páginas.
+As listagens de ninjas e missões utilizam o `PagedModel` do Spring Data, configurado por meio de `PageSerializationMode.VIA_DTO`, para disponibilizar uma estrutura JSON estável.
+
+A resposta contém o campo `content`, com os registros da página solicitada, e o objeto `page`, que reúne os metadados da paginação.
 
 Exemplo ilustrativo de uma resposta de `GET /ninjas?page=0&size=2&sort=nome,asc`:
 
@@ -239,35 +241,29 @@ Exemplo ilustrativo de uma resposta de `GET /ninjas?page=0&size=2&sort=nome,asc`
       "missaoId": null
     }
   ],
-  "number": 0,
-  "size": 2,
-  "numberOfElements": 2,
-  "totalElements": 2,
-  "totalPages": 1,
-  "first": true,
-  "last": true,
-  "empty": false
+  "page": {
+    "size": 2,
+    "number": 0,
+    "totalElements": 2,
+    "totalPages": 1
+  }
 }
 ```
-
-O JSON acima apresenta os principais campos da resposta. O Spring Data também pode incluir informações adicionais, como `pageable` e `sort`.
 
 ### Metadados da paginação
 
 | Campo | Descrição |
 | --- | --- |
 | `content` | Registros da página solicitada |
-| `number` | Número da página atual |
-| `size` | Tamanho configurado da página |
-| `numberOfElements` | Quantidade de registros retornados na página |
-| `totalElements` | Quantidade total de registros disponíveis |
-| `totalPages` | Quantidade total de páginas |
-| `first` | Indica se é a primeira página |
-| `last` | Indica se é a última página |
-| `empty` | Indica se a página está vazia |
+| `page.size` | Quantidade máxima de registros por página |
+| `page.number` | Número da página atual, começando em zero |
+| `page.totalElements` | Quantidade total de registros disponíveis |
+| `page.totalPages` | Quantidade total de páginas |
 
-**Observação:** a paginação altera o formato das respostas dos endpoints de listagem. Em vez de um array JSON diretamente na raiz, os registros passam a ser retornados dentro do campo `content`.
-```
+A configuração é aplicada globalmente por meio da classe `PaginationConfig`, sem necessidade de modificar os controllers ou services.
+
+**Observação:** a paginação altera o formato das respostas dos endpoints de listagem. Em vez de um array JSON diretamente na raiz, os registros são retornados dentro do campo `content`. Os parâmetros `page`, `size` e `sort` continuam disponíveis nas requisições, mas o JSON de resposta não apresenta mais os campos `first`, `last`, `empty`, `numberOfElements`, `pageable` e `sort` da representação anterior.
+
 
 ## Códigos de resposta HTTP
 
