@@ -15,6 +15,8 @@ API REST desenvolvida com **Java 21** e **Spring Boot 4.1.1** para gerenciamento
 - JUnit 5, Spring Boot Test e MockMvc
 - JaCoCo, para cobertura de testes
 - GitHub Actions, para integração contínua
+- SpringDoc OpenAPI e Swagger UI, para documentação interativa da API
+
 
 ## Funcionalidades
 
@@ -116,6 +118,41 @@ As configurações podem ser consultadas em:
 
 - `src/main/resources/application.properties`
 - `src/test/resources/application-test.properties`
+
+
+## Documentação interativa da API
+
+O projeto utiliza **SpringDoc OpenAPI** para gerar automaticamente a documentação da API, disponibilizando uma interface interativa por meio do **Swagger UI**.
+
+Após iniciar a aplicação, a documentação pode ser acessada nos seguintes endereços:
+
+- **Swagger UI:** http://localhost:8080/swagger-ui.html
+- **Especificação OpenAPI (JSON):** http://localhost:8080/v3/api-docs
+
+### Recursos disponíveis
+
+O Swagger UI permite:
+
+- Visualizar os endpoints e seus métodos HTTP.
+- Consultar os parâmetros, DTOs e modelos de resposta.
+- Identificar os códigos de resposta HTTP documentados.
+- Executar requisições diretamente pelo navegador.
+- Consultar os parâmetros de paginação e ordenação.
+
+### Organização dos endpoints
+
+A documentação está organizada em três grupos:
+
+| Grupo | Quantidade de endpoints |
+| --- | ---: |
+| Ninjas | 5 |
+| Missões | 6 |
+| Associação de Ninjas e Missões | 5 |
+| **Total** | **16** |
+
+A documentação OpenAPI apresenta o título **CadastroDeNinjas API**, versão `1.0.0`.
+
+> **Observação:** as requisições executadas pelo Swagger UI utilizam a API real e podem modificar os dados do banco local. Operações de cadastro, atualização e exclusão devem ser executadas com atenção.
 
 ## Principais rotas
 
@@ -511,6 +548,7 @@ CadastroDeNinjas/
 │   ├── main/
 │   │   ├── java/
 │   │   │   └── lucassena/CadastroDeNinjas/
+│   │   │       ├── config/
 │   │   │       ├── exceptions/
 │   │   │       ├── missaoStatus/
 │   │   │       ├── missoes/
